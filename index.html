@@ -93,8 +93,12 @@
                 <section class="space-y-4">
                     <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">2. Profil</h3>
                     <div>
-                        <label class="block text-xs font-semibold mb-1 text-slate-600">URL du Logo / Photo</label>
-                        <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="https://..." class="w-full text-sm p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-semibold mb-1 text-slate-600">Logo / Photo de profil</label>
+                        <div class="space-y-2">
+                            <input type="file" accept="image/*" @change="handleImageUpload" class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                            <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou</div>
+                            <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="Coller un lien (https://...)" class="w-full text-sm p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-slate-600">Titre</label>
@@ -236,6 +240,22 @@
                 formatDescription(text) {
                     if(!text) return '';
                     return text.replace(/\n/g, '<br>');
+                },
+
+                handleImageUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        if (file.size > 2 * 1024 * 1024) { 
+                            alert("L'image est trop lourde (limite 2Mo pour le stockage local). Veuillez choisir une image plus légère.");
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.settings.logoUrl = e.target.result;
+                            this.saveState();
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 },
 
                 addLink() {
