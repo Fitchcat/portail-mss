@@ -718,11 +718,26 @@
                 async login() {
                     this.authLoading = true;
                     this.authError = '';
+                    
+                    // Fallback DOM direct au cas où LastPass n'a pas déclenché d'événement Alpine
+                    const emailVal = this.authEmail || document.getElementById('authEmail').value;
+                    const passVal = this.authPassword || document.getElementById('authPassword').value;
+
                     const { error } = await this.supabase.auth.signInWithPassword({
-                        email: this.authEmail,
-                        password: this.authPassword,
+                        email: emailVal.trim(),
+                        password: passVal,
                     });
-                    if (error) this.authError = 'Email ou mot de passe incorrect.';
+                    if (error) {
+                        console.error("Erreur Auth:", error);
+                        // Afficher l'erreur exacte renvoyée par Supabase (traduite si classique)
+                        if (error.message.includes('Email not confirmed')) {
+                            this.authError = 'Email non confirmé (Désactivez "Confirm Email" dans Supabase).';
+                        } else if (error.message.includes('Invalid login credentials')) {
+                            this.authError = 'Email ou mot de passe incorrect.';
+                        } else {
+                            this.authError = error.message;
+                        }
+                    }
                     this.authLoading = false;
                 },
 
