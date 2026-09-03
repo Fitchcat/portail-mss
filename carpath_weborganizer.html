@@ -930,6 +930,17 @@
                             this.settings = { ...this.settings, ...parsed.settings };
                             this.categories = parsed.categories || [];
                         } catch (e) { console.error('Load error', e); }
+                    } else {
+                        // TENTATIVE DE RECUPERATION DES DONNEES LOCALES (Migration)
+                        const saved = localStorage.getItem('mssLinktreeState');
+                        if (saved) {
+                            try {
+                                const parsed = JSON.parse(saved);
+                                if (parsed.settings) this.settings = { ...this.settings, ...parsed.settings };
+                                if (parsed.categories) this.categories = parsed.categories;
+                                console.log("Données récupérées depuis le cache local !");
+                            } catch (e) { console.error('Local Load error', e); }
+                        }
                     }
                 },
 
