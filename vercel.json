@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/carpath_weborganizer.html" },
+    { "source": "/carpath_outils_mss", "destination": "/carpath_weborganizer.html" }
+  ]
+}
