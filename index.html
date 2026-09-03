@@ -8,25 +8,44 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        
-        /* Custom scrollbar for the admin panel */
         .admin-scroll::-webkit-scrollbar { width: 6px; }
         .admin-scroll::-webkit-scrollbar-track { background: transparent; }
         .admin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        .link-button {
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .link-button:hover {
-            transform: scale(1.03);
-        }
+        .link-button { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .link-button:hover { transform: scale(1.03); }
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; object-fit: cover; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
+    <script>
+        tailwind.config = {
+            safelist: [
+                'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 
+                'grid-cols-4', 'grid-cols-5', 'grid-cols-6',
+                'sm:grid-cols-2', 'md:grid-cols-2', 'md:grid-cols-3', 
+                'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 
+                'lg:grid-cols-4', 'lg:grid-cols-5', 'lg:grid-cols-6'
+            ]
+        }
+    </script>
 </head>
-<body x-data="linktreeApp()" class="min-h-screen relative transition-colors duration-300" :style="`background-color: ${settings.bgColor}; color: ${settings.textColor}`">
+<body x-data="linktreeApp()" class="min-h-screen relative transition-colors duration-300" :style="bodyStyle()">
+
+    <!-- Arrière-plans dynamiques -->
+    <template x-if="settings.bgType === 'image' && settings.bgImage">
+        <img :src="settings.bgImage" class="bg-layer" alt="Background">
+    </template>
+    <template x-if="settings.bgType === 'video' && settings.bgVideo">
+        <video :src="settings.bgVideo" autoplay loop muted playsinline class="bg-layer"></video>
+    </template>
+    <!-- Overlay sombre léger si fond image ou vidéo pour la lisibilité -->
+    <template x-if="settings.bgType !== 'color'">
+        <div class="fixed inset-0 bg-black/40 z-[-1]"></div>
+    </template>
 
     <!-- Bouton flottant pour ouvrir l'admin -->
     <button @click="editMode = !editMode" 
-            class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-slate-800 transition-transform hover:scale-110 flex items-center gap-2 group">
+            class="fixed bottom-6 left-6 z-50 bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-slate-800 transition-transform hover:scale-110 flex items-center gap-2 group">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -34,168 +53,312 @@
         <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold" x-text="editMode ? 'Fermer' : 'Éditer la page'"></span>
     </button>
 
-    <!-- Layout principal : Split screen si editMode est true -->
-    <div class="flex h-screen w-full overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden flex-row-reverse">
         
-        <!-- Panneau d'administration (Gauche) -->
+        <!-- Panneau d'administration (Droite) -->
         <div x-show="editMode" 
              x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-start="translate-x-full"
              x-transition:enter-end="translate-x-0"
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="-translate-x-full"
-             class="w-full md:w-96 bg-white text-slate-800 shadow-2xl z-40 h-full flex flex-col absolute md:relative border-r border-slate-200">
-            
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-                <h2 class="text-xl font-bold text-slate-900">Paramètres</h2>
-                <button @click="resetDefaults" class="text-xs text-red-600 font-semibold hover:bg-red-50 px-2 py-1 rounded">Réinitialiser</button>
-            </div>
+             x-transition:leave-end="translate-x-full"
+             class="w-full md:w-[450px] bg-white text-slate-800 shadow-2xl z-40 h-full flex flex-col absolute md:relative border-l border-slate-200 right-0">
+             
+            <!-- Contenu de l'admin (Vue Principale) -->
+            <template x-if="adminView === 'main'">
+                <div class="flex flex-col h-full">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+                        <h2 class="text-xl font-bold text-slate-900">Paramètres</h2>
+                        <button @click="resetDefaults" class="text-xs text-red-600 font-semibold hover:bg-red-50 px-2 py-1 rounded">Réinitialiser</button>
+                    </div>
 
-            <div class="p-6 overflow-y-auto admin-scroll flex-1 space-y-8">
-                
-                <!-- Section Design -->
-                <section class="space-y-4">
-                    <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">1. Design & Couleurs</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-slate-600">Fond de la page</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color" x-model="settings.bgColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
-                                <input type="text" x-model="settings.bgColor" @input="saveState" class="w-full text-xs p-1.5 border rounded">
+                    <div class="p-6 overflow-y-auto admin-scroll flex-1 space-y-8">
+                        
+                        <!-- Section Arrière-plan & Couleurs -->
+                        <section class="space-y-4">
+                            <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">1. Design & Fond</h3>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Type d'arrière-plan</label>
+                                <select x-model="settings.bgType" @change="saveState" class="w-full text-sm p-2 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="color">Couleur unie</option>
+                                    <option value="image">Image</option>
+                                    <option value="video">Vidéo</option>
+                                </select>
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-slate-600">Texte principal</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color" x-model="settings.textColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
-                                <input type="text" x-model="settings.textColor" @input="saveState" class="w-full text-xs p-1.5 border rounded">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-slate-600">Fond des boutons</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color" x-model="settings.buttonBgColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
-                                <input type="text" x-model="settings.buttonBgColor" @input="saveState" class="w-full text-xs p-1.5 border rounded">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-slate-600">Texte des boutons</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color" x-model="settings.buttonTextColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
-                                <input type="text" x-model="settings.buttonTextColor" @input="saveState" class="w-full text-xs p-1.5 border rounded">
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
-                <!-- Section Profil -->
-                <section class="space-y-4">
-                    <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">2. Profil</h3>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-slate-600">Logo / Photo de profil</label>
-                        <div class="space-y-2">
-                            <input type="file" accept="image/*" @change="handleImageUpload" class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                            <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou</div>
-                            <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="Coller un lien (https://...)" class="w-full text-sm p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-slate-600">Titre</label>
-                        <input type="text" x-model="settings.title" @input="saveState" class="w-full text-sm p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-slate-600">Description</label>
-                        <textarea x-model="settings.description" @input="saveState" rows="3" class="w-full text-sm p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-                    </div>
-                </section>
-
-                <!-- Section Liens -->
-                <section class="space-y-4">
-                    <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2 flex justify-between items-center">
-                        3. Boutons & Liens
-                        <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="links.length"></span>
-                    </h3>
-                    
-                    <div class="space-y-3" x-ref="linksList">
-                        <template x-for="(link, index) in links" :key="link.id">
-                            <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group">
-                                <button @click="removeLink(index)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                                
-                                <div class="grid grid-cols-12 gap-2 mb-2">
-                                    <div class="col-span-3">
-                                        <label class="block text-[10px] font-semibold text-slate-500 mb-1">Emoji</label>
-                                        <input type="text" x-model="link.emoji" @input="saveState" placeholder="🚀" class="w-full text-center text-sm p-1.5 border rounded outline-none focus:border-blue-500">
-                                    </div>
-                                    <div class="col-span-9">
-                                        <label class="block text-[10px] font-semibold text-slate-500 mb-1">Titre du bouton</label>
-                                        <input type="text" x-model="link.title" @input="saveState" class="w-full text-sm p-1.5 border rounded outline-none focus:border-blue-500 font-semibold">
+                            <div x-show="settings.bgType === 'color'" class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-600">Fond de la page</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" x-model="settings.bgColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
+                                        <input type="text" x-model="settings.bgColor" @input="saveState" class="w-full text-xs p-1.5 border rounded">
                                     </div>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">Sous-titre (Optionnel)</label>
-                                    <input type="text" x-model="link.subtitle" @input="saveState" placeholder="Ex: 16 rue Samuel..." class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500">
+                            </div>
+
+                            <div x-show="settings.bgType === 'image'" class="space-y-2">
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Image de fond</label>
+                                <input type="file" accept="image/*" @change="handleBgImageUpload" class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                                <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou</div>
+                                <input type="text" x-model="settings.bgImage" @input="saveState" placeholder="Lien de l'image (https://...)" class="w-full text-sm p-2 border rounded">
+                            </div>
+
+                            <div x-show="settings.bgType === 'video'" class="space-y-2">
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Vidéo de fond (URL recommandée)</label>
+                                <input type="text" x-model="settings.bgVideo" @input="saveState" placeholder="Lien de la vidéo MP4 (https://...)" class="w-full text-sm p-2 border rounded mb-2">
+                                <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou (fichiers légers < 3Mo)</div>
+                                <input type="file" accept="video/mp4,video/webm" @change="handleBgVideoUpload" class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-2">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-600">Texte principal</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" x-model="settings.textColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
+                                    </div>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">URL (Lien)</label>
-                                    <input type="url" x-model="link.url" @input="saveState" placeholder="https://..." class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-blue-600">
+                                    <label class="block text-xs font-semibold mb-1 text-slate-600">Fond des boutons/cartes</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" x-model="settings.buttonBgColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-600">Texte boutons/cartes</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" x-model="settings.buttonTextColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
+                                    </div>
                                 </div>
                             </div>
-                        </template>
+                        </section>
+
+                        <!-- Section Profil -->
+                        <section class="space-y-4">
+                            <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">2. Profil</h3>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Logo / Photo</label>
+                                <div class="space-y-2">
+                                    <input type="file" accept="image/*" @change="handleLogoUpload" class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:bg-blue-50 cursor-pointer">
+                                    <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="Lien (https://...)" class="w-full text-sm p-2 border rounded">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Titre</label>
+                                <input type="text" x-model="settings.title" @input="saveState" class="w-full text-sm p-2 border rounded font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Description</label>
+                                <textarea x-model="settings.description" @input="saveState" rows="3" class="w-full text-sm p-2 border rounded resize-none"></textarea>
+                            </div>
+                        </section>
+
+                        <!-- Section Dossiers -->
+                        <section class="space-y-4">
+                            <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2 flex justify-between items-center">
+                                3. Dossiers
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="folders.length"></span>
+                            </h3>
+                            
+                            <div class="space-y-3" x-ref="foldersList">
+                                <template x-for="(folder, index) in folders" :key="folder.id">
+                                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
+                                        <div class="flex-1 mr-4 cursor-pointer" @click="editFolder(folder.id)">
+                                            <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="folder.title || 'Dossier sans titre'"></div>
+                                            <div class="text-[10px] text-slate-500" x-text="folder.cards.length + ' carte(s)'"></div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button @click="editFolder(folder.id)" class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-100">
+                                                Éditer les cartes
+                                            </button>
+                                            <button @click="removeFolder(index)" class="text-slate-400 hover:text-red-500">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button @click="addFolder" class="w-full py-2.5 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Créer un dossier
+                            </button>
+                        </section>
+                        <div class="pb-12"></div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Vue d'édition d'un dossier spécifique -->
+            <template x-if="adminView === 'folder' && activeFolder">
+                <div class="flex flex-col h-full bg-slate-50">
+                    <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-white shrink-0">
+                        <button @click="backToAdminMain" class="p-1.5 hover:bg-slate-100 rounded text-slate-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="font-bold text-slate-900 truncate">Édition: <span x-text="activeFolder.title"></span></div>
                     </div>
 
-                    <button @click="addLink" class="w-full py-2.5 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Ajouter un nouveau lien
-                    </button>
-                </section>
+                    <div class="p-6 overflow-y-auto admin-scroll flex-1 space-y-6">
+                        <!-- Paramètres du dossier -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Titre du dossier</label>
+                                <input type="text" x-model="activeFolder.title" @input="saveState" class="w-full text-sm p-2 border rounded font-semibold focus:border-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Disposition (Colonnes sur grand écran)</label>
+                                <select x-model.number="activeFolder.columns" @change="saveState" class="w-full text-sm p-2 border rounded focus:border-blue-500 outline-none">
+                                    <option value="1">1 Colonne (Style Liste)</option>
+                                    <option value="2">2 Colonnes</option>
+                                    <option value="3">3 Colonnes</option>
+                                    <option value="4">4 Colonnes</option>
+                                    <option value="5">5 Colonnes</option>
+                                    <option value="6">6 Colonnes</option>
+                                </select>
+                            </div>
+                        </div>
 
-                <div class="pb-12"></div> <!-- Espace pour le bouton flottant -->
-            </div>
+                        <!-- Liste des cartes -->
+                        <div>
+                            <h3 class="font-bold text-slate-600 uppercase text-xs tracking-wider border-b pb-2 mb-3 flex justify-between items-center">
+                                Cartes du dossier
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeFolder.cards.length"></span>
+                            </h3>
+
+                            <div class="space-y-4">
+                                <template x-for="(card, index) in activeFolder.cards" :key="card.id">
+                                    <div class="bg-white border border-slate-200 p-4 rounded-lg relative shadow-sm group">
+                                        <button @click="removeCard(index)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                        
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Titre de la carte</label>
+                                                <input type="text" x-model="card.title" @input="saveState" class="w-full text-sm p-1.5 border rounded outline-none focus:border-blue-500 font-semibold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Image de la carte</label>
+                                                <div class="flex gap-2 mb-1">
+                                                    <input type="file" accept="image/*" @change="e => handleCardImageUpload(e, card)" class="block w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                                                </div>
+                                                <input type="text" x-model="card.image" @input="saveState" placeholder="Ou coller l'URL de l'image" class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">URL (Cible du clic)</label>
+                                                <input type="url" x-model="card.url" @input="saveState" placeholder="https://..." class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-blue-600">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button @click="addCard" class="w-full mt-4 py-2.5 border-2 border-dashed border-blue-300 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Ajouter une carte
+                            </button>
+                        </div>
+                        <div class="pb-12"></div>
+                    </div>
+                </div>
+            </template>
         </div>
 
-        <!-- Preview (Droite / Centre) -->
+        <!-- Preview (Gauche / Centre) -->
         <div class="flex-1 h-full overflow-y-auto relative w-full">
-            <div class="max-w-[480px] mx-auto px-4 py-12 md:py-20 flex flex-col items-center min-h-full">
+            <div class="max-w-5xl mx-auto px-4 py-12 md:py-20 flex flex-col items-center min-h-full">
                 
                 <!-- En-tête Profil -->
-                <div class="text-center mb-10 w-full">
+                <div class="text-center mb-10 w-full max-w-[480px]">
                     <div class="w-24 h-24 md:w-28 md:h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 shadow-lg" :style="`border-color: ${settings.buttonBgColor}`">
-                        <img :src="settings.logoUrl || 'https://via.placeholder.com/150?text=Logo'" alt="Logo" class="w-full h-full object-cover">
+                        <img :src="settings.logoUrl || 'https://via.placeholder.com/150?text=Logo'" alt="Logo" class="w-full h-full object-cover bg-white">
                     </div>
-                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight mb-3" x-text="settings.title || 'Mon Titre'"></h1>
-                    <p class="text-sm md:text-base font-medium opacity-90 leading-relaxed px-4" x-html="formatDescription(settings.description)"></p>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight mb-3 drop-shadow-md" x-text="settings.title || 'Mon Titre'"></h1>
+                    <p class="text-sm md:text-base font-medium opacity-90 leading-relaxed px-4 drop-shadow-md" x-html="formatDescription(settings.description)"></p>
                 </div>
 
-                <!-- Liste des boutons -->
-                <div class="w-full space-y-4">
-                    <template x-for="link in links" :key="link.id">
-                        <a :href="link.url" target="_blank" rel="noopener noreferrer" 
-                           class="link-button group w-full flex items-center p-4 rounded-2xl shadow-sm relative overflow-hidden"
-                           :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
-                            
-                            <!-- Icon/Emoji -->
-                            <div class="w-10 flex-shrink-0 text-2xl flex justify-center" x-text="link.emoji"></div>
-                            
-                            <!-- Text content -->
-                            <div class="flex-1 text-center pr-10">
-                                <h3 class="font-bold text-base md:text-lg" x-text="link.title"></h3>
-                                <p x-show="link.subtitle" class="text-xs md:text-sm mt-0.5 opacity-80" x-text="link.subtitle"></p>
+                <!-- CONTENU PRINCIPAL -->
+                <div class="w-full">
+                    
+                    <!-- VUE LISTE DES DOSSIERS -->
+                    <template x-if="!currentFolderId">
+                        <div class="w-full max-w-[480px] mx-auto space-y-4 animate-fade-in">
+                            <template x-for="folder in folders" :key="folder.id">
+                                <button @click="openFolder(folder.id)" 
+                                        class="link-button group w-full flex items-center p-4 rounded-2xl shadow-sm relative overflow-hidden text-left"
+                                        :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                    
+                                    <div class="w-10 flex-shrink-0 flex justify-center text-opacity-70">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                                    </div>
+                                    <div class="flex-1 pr-10">
+                                        <h3 class="font-bold text-base md:text-lg" x-text="folder.title"></h3>
+                                        <p class="text-xs mt-0.5 opacity-70" x-text="folder.cards.length + ' élément(s)'"></p>
+                                    </div>
+                                    <div class="absolute right-4 transition-transform transform group-hover:translate-x-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </div>
+                                </button>
+                            </template>
+                            <div x-show="folders.length === 0" class="text-center py-8 opacity-70">
+                                Aucun dossier pour le moment.
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- VUE CONTENU D'UN DOSSIER (CARTES EN GRILLE) -->
+                    <template x-if="currentFolderId && currentFolder">
+                        <div class="w-full animate-fade-in">
+                            <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
+                                <button @click="closeFolder()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-transform hover:-translate-x-1" :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    Retour
+                                </button>
+                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md" x-text="currentFolder.title"></h2>
+                                <div class="hidden md:block w-24"></div> <!-- Spacer for centering -->
                             </div>
 
-                            <!-- Arrow icon -->
-                            <div class="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            <!-- Grille dynamique basée sur currentFolder.columns -->
+                            <div class="grid gap-4 mx-auto" 
+                                 :class="[
+                                    'grid-cols-1', 
+                                    currentFolder.columns > 1 ? 'sm:grid-cols-2' : '',
+                                    currentFolder.columns > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + currentFolder.columns,
+                                    'lg:grid-cols-' + currentFolder.columns
+                                 ].filter(Boolean).join(' ')"
+                                 :style="currentFolder.columns === 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
+                                <template x-for="card in currentFolder.cards" :key="card.id">
+                                    <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
+                                       class="link-button flex flex-col rounded-2xl shadow-sm overflow-hidden relative group"
+                                       :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                        
+                                        <!-- Image de la carte -->
+                                        <template x-if="card.image">
+                                            <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
+                                                <img :src="card.image" alt="Card Image" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            </div>
+                                        </template>
+                                        
+                                        <!-- Contenu de la carte -->
+                                        <div class="p-4 flex-1 flex flex-col justify-center text-center">
+                                            <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
+                                        </div>
+                                    </a>
+                                </template>
                             </div>
-                        </a>
+                            <div x-show="currentFolder.cards.length === 0" class="text-center py-8 opacity-70">
+                                Ce dossier est vide.
+                            </div>
+                        </div>
                     </template>
+
                 </div>
 
                 <!-- Footer branding -->
                 <div class="mt-16 text-center opacity-70">
-                    <a href="#" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-sm font-semibold backdrop-blur-sm">
+                    <a href="#" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-sm font-semibold backdrop-blur-sm shadow-sm" :style="settings.bgType !== 'color' ? 'color: white' : `color: ${settings.textColor}`">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
                         Créé avec My Sport Business
                     </a>
@@ -208,33 +371,59 @@
     <script>
         const defaultState = {
             settings: {
+                bgType: 'color', // 'color', 'image', 'video'
                 bgColor: '#5b7065',
                 textColor: '#ffffff',
                 buttonBgColor: '#ffffff',
                 buttonTextColor: '#5b7065',
-                logoUrl: 'https://i.ibb.co/3s7s6qM/logo-mss.png', // Exemple de logo générique ou place holder
+                bgImage: '',
+                bgVideo: '',
+                logoUrl: 'https://i.ibb.co/3s7s6qM/logo-mss.png',
                 title: 'My Sport Business Tools',
-                description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez un outil ci-dessous.',
+                description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez un dossier ci-dessous.',
             },
-            links: [
-                { id: 1, emoji: '📊', title: 'Simulateur de Capacité & CA', subtitle: 'Pour anticiper le scaling', url: 'simulateur_capacite.html' },
-                { id: 2, emoji: '🎯', title: 'Audit Marketing Interactif', subtitle: 'Générer des leads qualifiés', url: '#' },
-                { id: 3, emoji: '⚡', title: 'Landing Page Dynamique', subtitle: 'Test de conversion', url: 'https://landingcarpathdynamique.netlify.app' },
-                { id: 4, emoji: '📱', title: 'Outil de collecte d\'avis Google', subtitle: 'Scannez le QR Code', url: '#' }
+            folders: [
+                { 
+                    id: 1, 
+                    title: 'Outils & Simulateurs', 
+                    columns: 2,
+                    cards: [
+                        { id: 1, title: 'Simulateur de Capacité & CA', url: 'simulateur_capacite.html', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80' },
+                        { id: 2, title: 'Landing Page Dynamique', url: 'https://landingcarpathdynamique.netlify.app', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=80' }
+                    ]
+                }
             ]
         };
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('linktreeApp', () => ({
                 editMode: false,
+                adminView: 'main', // 'main' | 'folder'
+                editingFolderId: null,
+                currentFolderId: null,
+
                 settings: JSON.parse(JSON.stringify(defaultState.settings)),
-                links: JSON.parse(JSON.stringify(defaultState.links)),
+                folders: JSON.parse(JSON.stringify(defaultState.folders)),
                 nextId: 100,
 
                 init() {
                     this.loadState();
-                    // Permet d'ouvrir directement l'éditeur s'il n'y a pas de lien
-                    if(this.links.length === 0) this.editMode = true;
+                    if(this.folders.length === 0) this.editMode = true;
+                },
+
+                get activeFolder() {
+                    return this.folders.find(f => f.id === this.editingFolderId);
+                },
+
+                get currentFolder() {
+                    return this.folders.find(f => f.id === this.currentFolderId);
+                },
+
+                bodyStyle() {
+                    if(this.settings.bgType === 'color') {
+                        return `background-color: ${this.settings.bgColor}; color: ${this.settings.textColor}`;
+                    }
+                    return `color: ${this.settings.textColor}`;
                 },
 
                 formatDescription(text) {
@@ -242,42 +431,81 @@
                     return text.replace(/\n/g, '<br>');
                 },
 
-                handleImageUpload(event) {
-                    const file = event.target.files[0];
+                // --- Navigation Public ---
+                openFolder(id) {
+                    this.currentFolderId = id;
+                },
+                closeFolder() {
+                    this.currentFolderId = null;
+                },
+
+                // --- Navigation Admin ---
+                editFolder(id) {
+                    this.editingFolderId = id;
+                    this.adminView = 'folder';
+                },
+                backToAdminMain() {
+                    this.editingFolderId = null;
+                    this.adminView = 'main';
+                    this.saveState();
+                },
+
+                // --- Uploads (Base64 pour le local, max 3Mo) ---
+                processFileUpload(file, callback) {
                     if (file) {
-                        if (file.size > 2 * 1024 * 1024) { 
-                            alert("L'image est trop lourde (limite 2Mo pour le stockage local). Veuillez choisir une image plus légère.");
+                        if (file.size > 3 * 1024 * 1024) { 
+                            alert("Le fichier est trop lourd (limite ~3Mo). Préférez utiliser une URL (lien) pour les gros fichiers.");
                             return;
                         }
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            this.settings.logoUrl = e.target.result;
+                            callback(e.target.result);
                             this.saveState();
                         };
                         reader.readAsDataURL(file);
                     }
                 },
+                handleLogoUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.logoUrl = res); },
+                handleBgImageUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.bgImage = res); },
+                handleBgVideoUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.bgVideo = res); },
+                handleCardImageUpload(event, card) { this.processFileUpload(event.target.files[0], (res) => card.image = res); },
 
-                addLink() {
+                // --- Gestion des Données ---
+                addFolder() {
                     this.nextId++;
-                    this.links.push({
+                    this.folders.push({
                         id: this.nextId,
-                        emoji: '🔗',
-                        title: 'Nouveau lien',
-                        subtitle: '',
-                        url: 'https://'
+                        title: 'Nouveau dossier',
+                        columns: 2,
+                        cards: []
                     });
                     this.saveState();
-                    // Scroll to bottom of admin panel smoothly
                     setTimeout(() => {
-                        const list = this.$refs.linksList;
+                        const list = this.$refs.foldersList;
                         if(list) list.parentElement.scrollTop = list.parentElement.scrollHeight;
                     }, 50);
                 },
-
-                removeLink(index) {
-                    if(confirm("Supprimer ce lien ?")) {
-                        this.links.splice(index, 1);
+                removeFolder(index) {
+                    if(confirm("Supprimer ce dossier et tout son contenu ?")) {
+                        this.folders.splice(index, 1);
+                        this.saveState();
+                    }
+                },
+                addCard() {
+                    if(!this.activeFolder) return;
+                    this.nextId++;
+                    this.activeFolder.cards.push({
+                        id: this.nextId,
+                        title: 'Nouvelle carte',
+                        image: '',
+                        url: 'https://'
+                    });
+                    this.saveState();
+                },
+                removeCard(index) {
+                    if(!this.activeFolder) return;
+                    if(confirm("Supprimer cette carte ?")) {
+                        this.activeFolder.cards.splice(index, 1);
                         this.saveState();
                     }
                 },
@@ -285,7 +513,7 @@
                 saveState() {
                     const state = {
                         settings: this.settings,
-                        links: this.links
+                        folders: this.folders
                     };
                     localStorage.setItem('mssLinktreeState', JSON.stringify(state));
                 },
@@ -295,8 +523,30 @@
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
-                            this.settings = { ...this.settings, ...parsed.settings };
-                            this.links = parsed.links || this.links;
+                            
+                            // Upgrade existant (si c'était l'ancienne version avec `links`)
+                            if(parsed.links && !parsed.folders) {
+                                this.folders = [{
+                                    id: 1,
+                                    title: 'Mes Liens (Anciens)',
+                                    columns: 1,
+                                    cards: parsed.links.map(l => ({
+                                        id: l.id,
+                                        title: l.title,
+                                        url: l.url,
+                                        image: ''
+                                    }))
+                                }];
+                            } else if (parsed.folders) {
+                                this.folders = parsed.folders;
+                            }
+                            
+                            if (parsed.settings) {
+                                this.settings = { ...this.settings, ...parsed.settings };
+                                // S'assurer que les nouvelles clés existent si le state est vieux
+                                if(!this.settings.bgType) this.settings.bgType = 'color';
+                            }
+                            
                         } catch (e) {
                             console.error("Erreur de chargement", e);
                         }
@@ -304,10 +554,12 @@
                 },
 
                 resetDefaults() {
-                    if(confirm("Attention : Cela effacera tous vos liens et réglages personnalisés. Continuer ?")) {
+                    if(confirm("Attention : Cela effacera tous vos dossiers et réglages. Continuer ?")) {
                         localStorage.removeItem('mssLinktreeState');
                         this.settings = JSON.parse(JSON.stringify(defaultState.settings));
-                        this.links = JSON.parse(JSON.stringify(defaultState.links));
+                        this.folders = JSON.parse(JSON.stringify(defaultState.folders));
+                        this.currentFolderId = null;
+                        this.adminView = 'main';
                     }
                 }
             }));
