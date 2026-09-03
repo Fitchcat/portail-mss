@@ -65,7 +65,7 @@
              x-transition:leave-end="translate-x-full"
              class="w-full md:w-[450px] bg-white text-slate-800 shadow-2xl z-40 h-full flex flex-col absolute md:relative border-l border-slate-200 right-0">
              
-            <!-- Contenu de l'admin (Vue Principale) -->
+            <!-- VUE 1 : MENU PRINCIPAL (Catégories) -->
             <template x-if="adminView === 'main'">
                 <div class="flex flex-col h-full">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
@@ -187,25 +187,25 @@
                             </div>
                         </section>
 
-                        <!-- Section Dossiers -->
+                        <!-- Section Catégories -->
                         <section class="space-y-4">
                             <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2 flex justify-between items-center">
-                                3. Dossiers
-                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="folders.length"></span>
+                                3. Catégories
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="categories.length"></span>
                             </h3>
                             
-                            <div class="space-y-3" x-ref="foldersList">
-                                <template x-for="(folder, index) in folders" :key="folder.id">
+                            <div class="space-y-3" x-ref="categoriesList">
+                                <template x-for="(cat, index) in categories" :key="cat.id">
                                     <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
-                                        <div class="flex-1 mr-4 cursor-pointer" @click="editFolder(folder.id)">
-                                            <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="folder.title || 'Dossier sans titre'"></div>
-                                            <div class="text-[10px] text-slate-500" x-text="folder.cards.length + ' carte(s)'"></div>
+                                        <div class="flex-1 mr-4 cursor-pointer" @click="editCategory(cat.id)">
+                                            <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="cat.title || 'Catégorie sans titre'"></div>
+                                            <div class="text-[10px] text-slate-500" x-text="cat.subcategories.length + ' sous-catégorie(s)'"></div>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <button @click="editFolder(folder.id)" class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-100">
-                                                Éditer les cartes
+                                            <button @click="editCategory(cat.id)" class="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-100">
+                                                Gérer
                                             </button>
-                                            <button @click="removeFolder(index)" class="text-slate-400 hover:text-red-500">
+                                            <button @click="removeCategory(index)" class="text-slate-400 hover:text-red-500">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                             </button>
                                         </div>
@@ -213,9 +213,9 @@
                                 </template>
                             </div>
 
-                            <button @click="addFolder" class="w-full py-2.5 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
+                            <button @click="addCategory" class="w-full py-2.5 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                Créer un dossier
+                                Créer une catégorie
                             </button>
                         </section>
                         <div class="pb-12"></div>
@@ -223,26 +223,75 @@
                 </div>
             </template>
 
-            <!-- Vue d'édition d'un dossier spécifique -->
-            <template x-if="adminView === 'folder' && activeFolder">
+            <!-- VUE 2 : EDITION D'UNE CATEGORIE (Niveau 1) -->
+            <template x-if="adminView === 'category' && activeCategory">
                 <div class="flex flex-col h-full bg-slate-50">
                     <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-white shrink-0">
                         <button @click="backToAdminMain" class="p-1.5 hover:bg-slate-100 rounded text-slate-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <div class="font-bold text-slate-900 truncate">Édition: <span x-text="activeFolder.title"></span></div>
+                        <div class="font-bold text-slate-900 truncate">Catégorie: <span x-text="activeCategory.title"></span></div>
                     </div>
 
                     <div class="p-6 overflow-y-auto admin-scroll flex-1 space-y-6">
-                        <!-- Paramètres du dossier -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <label class="block text-xs font-semibold mb-1 text-slate-600">Nom de la catégorie</label>
+                            <input type="text" x-model="activeCategory.title" @input="saveState" class="w-full text-sm p-2 border rounded font-semibold focus:border-blue-500 outline-none">
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-slate-600 uppercase text-xs tracking-wider border-b pb-2 mb-3 flex justify-between items-center">
+                                Sous-catégories
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeCategory.subcategories.length"></span>
+                            </h3>
+
+                            <div class="space-y-3" x-ref="subcategoriesList">
+                                <template x-for="(sub, index) in activeCategory.subcategories" :key="sub.id">
+                                    <div class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
+                                        <div class="flex-1 mr-4 cursor-pointer" @click="editSubcategory(sub.id)">
+                                            <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="sub.title || 'Sans titre'"></div>
+                                            <div class="text-[10px] text-slate-500" x-text="sub.cards.length + ' carte(s)'"></div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button @click="editSubcategory(sub.id)" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-600 hover:bg-slate-100">
+                                                Gérer
+                                            </button>
+                                            <button @click="removeSubcategory(index)" class="text-slate-400 hover:text-red-500">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button @click="addSubcategory" class="w-full mt-4 py-2.5 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-semibold text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Créer une sous-catégorie
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- VUE 3 : EDITION D'UNE SOUS-CATEGORIE (Niveau 2) -->
+            <template x-if="adminView === 'subcategory' && activeSubcategory">
+                <div class="flex flex-col h-full bg-slate-50">
+                    <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-white shrink-0">
+                        <button @click="backToAdminCategory" class="p-1.5 hover:bg-slate-100 rounded text-slate-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="font-bold text-slate-900 truncate">Sous-cat: <span x-text="activeSubcategory.title"></span></div>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto admin-scroll flex-1 space-y-6">
                         <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-slate-600">Titre du dossier</label>
-                                <input type="text" x-model="activeFolder.title" @input="saveState" class="w-full text-sm p-2 border rounded font-semibold focus:border-blue-500 outline-none">
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Nom de la sous-catégorie</label>
+                                <input type="text" x-model="activeSubcategory.title" @input="saveState" class="w-full text-sm p-2 border rounded font-semibold focus:border-blue-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-slate-600">Disposition (Colonnes sur grand écran)</label>
-                                <select x-model.number="activeFolder.columns" @change="saveState" class="w-full text-sm p-2 border rounded focus:border-blue-500 outline-none">
+                                <select x-model.number="activeSubcategory.columns" @change="saveState" class="w-full text-sm p-2 border rounded focus:border-blue-500 outline-none">
                                     <option value="1">1 Colonne (Style Liste)</option>
                                     <option value="2">2 Colonnes</option>
                                     <option value="3">3 Colonnes</option>
@@ -253,15 +302,14 @@
                             </div>
                         </div>
 
-                        <!-- Liste des cartes -->
                         <div>
                             <h3 class="font-bold text-slate-600 uppercase text-xs tracking-wider border-b pb-2 mb-3 flex justify-between items-center">
-                                Cartes du dossier
-                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeFolder.cards.length"></span>
+                                Cartes (Niveau 3)
+                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeSubcategory.cards.length"></span>
                             </h3>
 
                             <div class="space-y-4">
-                                <template x-for="(card, index) in activeFolder.cards" :key="card.id">
+                                <template x-for="(card, index) in activeSubcategory.cards" :key="card.id">
                                     <div class="bg-white border border-slate-200 p-4 rounded-lg relative shadow-sm group">
                                         <button @click="removeCard(index)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -324,74 +372,108 @@
                 <!-- CONTENU PRINCIPAL -->
                 <div class="w-full">
                     
-                    <!-- VUE LISTE DES DOSSIERS -->
-                    <template x-if="!currentFolderId">
+                    <!-- VUE 1 : LISTE DES CATEGORIES -->
+                    <template x-if="!currentCategoryId">
                         <div class="w-full max-w-[480px] mx-auto space-y-4 animate-fade-in">
-                            <template x-for="folder in folders" :key="folder.id">
-                                <button @click="openFolder(folder.id)" 
+                            <template x-for="cat in categories" :key="cat.id">
+                                <button @click="openCategory(cat.id)" 
                                         class="link-button group w-full flex items-center p-4 rounded-2xl shadow-sm relative overflow-hidden text-left"
                                         :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
                                     
                                     <div class="w-10 flex-shrink-0 flex justify-center text-opacity-70">
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path><path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
                                     </div>
                                     <div class="flex-1 pr-10">
-                                        <h3 class="font-bold text-base md:text-lg" x-text="folder.title"></h3>
-                                        <p class="text-xs mt-0.5 opacity-70" x-text="folder.cards.length + ' élément(s)'"></p>
+                                        <h3 class="font-bold text-base md:text-lg" x-text="cat.title"></h3>
+                                        <p class="text-xs mt-0.5 opacity-70" x-text="cat.subcategories.length + ' sous-catégorie(s)'"></p>
                                     </div>
                                     <div class="absolute right-4 transition-transform transform group-hover:translate-x-1">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                     </div>
                                 </button>
                             </template>
-                            <div x-show="folders.length === 0" class="text-center py-8 opacity-70">
-                                Aucun dossier pour le moment.
+                            <div x-show="categories.length === 0" class="text-center py-8 opacity-70">
+                                Aucune catégorie pour le moment.
                             </div>
                         </div>
                     </template>
 
-                    <!-- VUE CONTENU D'UN DOSSIER (CARTES EN GRILLE) -->
-                    <template x-if="currentFolderId && currentFolder">
-                        <div class="w-full animate-fade-in">
-                            <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
-                                <button @click="closeFolder()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-transform hover:-translate-x-1" :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                    <!-- VUE 2 : LISTE DES SOUS-CATEGORIES -->
+                    <template x-if="currentCategoryId && !currentSubcategoryId && currentCategory">
+                        <div class="w-full max-w-[480px] mx-auto animate-fade-in">
+                            <div class="mb-6 flex items-center gap-4">
+                                <button @click="closeCategory()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-transform hover:-translate-x-1" :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     Retour
                                 </button>
-                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md" x-text="currentFolder.title"></h2>
+                                <h2 class="text-xl md:text-2xl font-bold drop-shadow-md" x-text="currentCategory.title"></h2>
+                            </div>
+
+                            <div class="space-y-4">
+                                <template x-for="sub in currentCategory.subcategories" :key="sub.id">
+                                    <button @click="openSubcategory(sub.id)" 
+                                            class="link-button group w-full flex items-center p-4 rounded-2xl shadow-sm relative overflow-hidden text-left"
+                                            :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                        
+                                        <div class="w-10 flex-shrink-0 flex justify-center text-opacity-70">
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
+                                        </div>
+                                        <div class="flex-1 pr-10">
+                                            <h3 class="font-bold text-base md:text-lg" x-text="sub.title"></h3>
+                                            <p class="text-xs mt-0.5 opacity-70" x-text="sub.cards.length + ' carte(s)'"></p>
+                                        </div>
+                                        <div class="absolute right-4 transition-transform transform group-hover:translate-x-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </div>
+                                    </button>
+                                </template>
+                                <div x-show="currentCategory.subcategories.length === 0" class="text-center py-8 opacity-70">
+                                    Cette catégorie est vide.
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- VUE 3 : GRILLE DES CARTES -->
+                    <template x-if="currentSubcategoryId && currentSubcategory">
+                        <div class="w-full animate-fade-in">
+                            <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
+                                <button @click="closeSubcategory()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-transform hover:-translate-x-1" :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    Retour
+                                </button>
+                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md" x-text="currentSubcategory.title"></h2>
                                 <div class="hidden md:block w-24"></div> <!-- Spacer for centering -->
                             </div>
 
-                            <!-- Grille dynamique basée sur currentFolder.columns -->
+                            <!-- Grille dynamique basée sur currentSubcategory.columns -->
                             <div class="grid gap-4 mx-auto" 
                                  :class="[
                                     'grid-cols-1', 
-                                    currentFolder.columns > 1 ? 'sm:grid-cols-2' : '',
-                                    currentFolder.columns > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + currentFolder.columns,
-                                    'lg:grid-cols-' + currentFolder.columns
+                                    currentSubcategory.columns > 1 ? 'sm:grid-cols-2' : '',
+                                    currentSubcategory.columns > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + currentSubcategory.columns,
+                                    'lg:grid-cols-' + currentSubcategory.columns
                                  ].filter(Boolean).join(' ')"
-                                 :style="currentFolder.columns === 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
-                                <template x-for="card in currentFolder.cards" :key="card.id">
+                                 :style="currentSubcategory.columns === 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
+                                <template x-for="card in currentSubcategory.cards" :key="card.id">
                                     <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
                                        class="link-button flex flex-col rounded-2xl shadow-sm overflow-hidden relative group"
                                        :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
                                         
-                                        <!-- Image de la carte -->
                                         <template x-if="card.image">
                                             <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
                                                 <img :src="card.image" alt="Card Image" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                             </div>
                                         </template>
                                         
-                                        <!-- Contenu de la carte -->
                                         <div class="p-4 flex-1 flex flex-col justify-center text-center">
                                             <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
                                         </div>
                                     </a>
                                 </template>
                             </div>
-                            <div x-show="currentFolder.cards.length === 0" class="text-center py-8 opacity-70">
-                                Ce dossier est vide.
+                            <div x-show="currentSubcategory.cards.length === 0" class="text-center py-8 opacity-70">
+                                Cette sous-catégorie est vide.
                             </div>
                         </div>
                     </template>
@@ -422,16 +504,22 @@
                 bgVideo: '',
                 logoUrl: 'https://i.ibb.co/3s7s6qM/logo-mss.png',
                 title: 'My Sport Business Tools',
-                description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez un dossier ci-dessous.',
+                description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez une catégorie ci-dessous.',
             },
-            folders: [
+            categories: [
                 { 
                     id: 1, 
                     title: 'Outils & Simulateurs', 
-                    columns: 2,
-                    cards: [
-                        { id: 1, title: 'Simulateur de Capacité & CA', url: 'simulateur_capacite.html', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80' },
-                        { id: 2, title: 'Landing Page Dynamique', url: 'https://landingcarpathdynamique.netlify.app', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=80' }
+                    subcategories: [
+                        {
+                            id: 101,
+                            title: 'Marketing & Conversion',
+                            columns: 2,
+                            cards: [
+                                { id: 1001, title: 'Simulateur de Capacité & CA', url: 'simulateur_capacite.html', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80' },
+                                { id: 1002, title: 'Landing Page Dynamique', url: 'https://landingcarpathdynamique.netlify.app', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=80' }
+                            ]
+                        }
                     ]
                 }
             ]
@@ -440,25 +528,36 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('linktreeApp', () => ({
                 editMode: false,
-                adminView: 'main', // 'main' | 'folder'
-                editingFolderId: null,
-                currentFolderId: null,
+                adminView: 'main', // 'main' | 'category' | 'subcategory'
+                editingCategoryId: null,
+                editingSubcategoryId: null,
+                
+                currentCategoryId: null,
+                currentSubcategoryId: null,
 
                 settings: JSON.parse(JSON.stringify(defaultState.settings)),
-                folders: JSON.parse(JSON.stringify(defaultState.folders)),
-                nextId: 100,
+                categories: JSON.parse(JSON.stringify(defaultState.categories)),
+                nextId: 2000,
 
                 init() {
                     this.loadState();
-                    if(this.folders.length === 0) this.editMode = true;
+                    if(this.categories.length === 0) this.editMode = true;
                 },
 
-                get activeFolder() {
-                    return this.folders.find(f => f.id === this.editingFolderId);
+                // --- Getters Admin ---
+                get activeCategory() {
+                    return this.categories.find(c => c.id === this.editingCategoryId);
+                },
+                get activeSubcategory() {
+                    return this.activeCategory?.subcategories.find(s => s.id === this.editingSubcategoryId);
                 },
 
-                get currentFolder() {
-                    return this.folders.find(f => f.id === this.currentFolderId);
+                // --- Getters Public ---
+                get currentCategory() {
+                    return this.categories.find(c => c.id === this.currentCategoryId);
+                },
+                get currentSubcategory() {
+                    return this.currentCategory?.subcategories.find(s => s.id === this.currentSubcategoryId);
                 },
 
                 bodyStyle() {
@@ -474,25 +573,43 @@
                 },
 
                 // --- Navigation Public ---
-                openFolder(id) {
-                    this.currentFolderId = id;
+                openCategory(id) {
+                    this.currentCategoryId = id;
+                    this.currentSubcategoryId = null;
                 },
-                closeFolder() {
-                    this.currentFolderId = null;
+                closeCategory() {
+                    this.currentCategoryId = null;
+                    this.currentSubcategoryId = null;
+                },
+                openSubcategory(id) {
+                    this.currentSubcategoryId = id;
+                },
+                closeSubcategory() {
+                    this.currentSubcategoryId = null;
                 },
 
                 // --- Navigation Admin ---
-                editFolder(id) {
-                    this.editingFolderId = id;
-                    this.adminView = 'folder';
+                editCategory(id) {
+                    this.editingCategoryId = id;
+                    this.adminView = 'category';
+                },
+                editSubcategory(id) {
+                    this.editingSubcategoryId = id;
+                    this.adminView = 'subcategory';
                 },
                 backToAdminMain() {
-                    this.editingFolderId = null;
+                    this.editingCategoryId = null;
+                    this.editingSubcategoryId = null;
                     this.adminView = 'main';
                     this.saveState();
                 },
+                backToAdminCategory() {
+                    this.editingSubcategoryId = null;
+                    this.adminView = 'category';
+                    this.saveState();
+                },
 
-                // --- Uploads (Base64 pour le local, max 3Mo) ---
+                // --- Uploads ---
                 processFileUpload(file, callback) {
                     if (file) {
                         if (file.size > 3 * 1024 * 1024) { 
@@ -513,30 +630,51 @@
                 handleCardImageUpload(event, card) { this.processFileUpload(event.target.files[0], (res) => card.image = res); },
 
                 // --- Gestion des Données ---
-                addFolder() {
+                addCategory() {
                     this.nextId++;
-                    this.folders.push({
+                    this.categories.push({
                         id: this.nextId,
-                        title: 'Nouveau dossier',
+                        title: 'Nouvelle Catégorie',
+                        subcategories: []
+                    });
+                    this.saveState();
+                    setTimeout(() => {
+                        const list = this.$refs.categoriesList;
+                        if(list) list.parentElement.scrollTop = list.parentElement.scrollHeight;
+                    }, 50);
+                },
+                removeCategory(index) {
+                    if(confirm("Supprimer cette catégorie et tout son contenu ?")) {
+                        this.categories.splice(index, 1);
+                        this.saveState();
+                    }
+                },
+                addSubcategory() {
+                    if(!this.activeCategory) return;
+                    this.nextId++;
+                    this.activeCategory.subcategories.push({
+                        id: this.nextId,
+                        title: 'Nouvelle Sous-catégorie',
                         columns: 2,
                         cards: []
                     });
                     this.saveState();
                     setTimeout(() => {
-                        const list = this.$refs.foldersList;
+                        const list = this.$refs.subcategoriesList;
                         if(list) list.parentElement.scrollTop = list.parentElement.scrollHeight;
                     }, 50);
                 },
-                removeFolder(index) {
-                    if(confirm("Supprimer ce dossier et tout son contenu ?")) {
-                        this.folders.splice(index, 1);
+                removeSubcategory(index) {
+                    if(!this.activeCategory) return;
+                    if(confirm("Supprimer cette sous-catégorie et toutes ses cartes ?")) {
+                        this.activeCategory.subcategories.splice(index, 1);
                         this.saveState();
                     }
                 },
                 addCard() {
-                    if(!this.activeFolder) return;
+                    if(!this.activeSubcategory) return;
                     this.nextId++;
-                    this.activeFolder.cards.push({
+                    this.activeSubcategory.cards.push({
                         id: this.nextId,
                         title: 'Nouvelle carte',
                         image: '',
@@ -545,9 +683,9 @@
                     this.saveState();
                 },
                 removeCard(index) {
-                    if(!this.activeFolder) return;
+                    if(!this.activeSubcategory) return;
                     if(confirm("Supprimer cette carte ?")) {
-                        this.activeFolder.cards.splice(index, 1);
+                        this.activeSubcategory.cards.splice(index, 1);
                         this.saveState();
                     }
                 },
@@ -555,7 +693,7 @@
                 saveState() {
                     const state = {
                         settings: this.settings,
-                        folders: this.folders
+                        categories: this.categories
                     };
                     localStorage.setItem('mssLinktreeState', JSON.stringify(state));
                 },
@@ -566,26 +704,44 @@
                         try {
                             const parsed = JSON.parse(saved);
                             
-                            // Upgrade existant (si c'était l'ancienne version avec `links`)
-                            if(parsed.links && !parsed.folders) {
-                                this.folders = [{
+                            // 1. Migration: Ancien système 'links' vers categories -> subcategories -> cards
+                            if(parsed.links && !parsed.folders && !parsed.categories) {
+                                this.categories = [{
                                     id: 1,
                                     title: 'Mes Liens (Anciens)',
-                                    columns: 1,
-                                    cards: parsed.links.map(l => ({
-                                        id: l.id,
-                                        title: l.title,
-                                        url: l.url,
-                                        image: ''
-                                    }))
+                                    subcategories: [{
+                                        id: 101,
+                                        title: 'Général',
+                                        columns: 1,
+                                        cards: parsed.links.map(l => ({
+                                            id: l.id,
+                                            title: l.title,
+                                            url: l.url,
+                                            image: ''
+                                        }))
+                                    }]
                                 }];
-                            } else if (parsed.folders) {
-                                this.folders = parsed.folders;
+                            } 
+                            // 2. Migration: Système 'folders' (2 niveaux) vers 'categories' (3 niveaux)
+                            else if (parsed.folders && !parsed.categories) {
+                                this.categories = parsed.folders.map(f => ({
+                                    id: f.id,
+                                    title: f.title,
+                                    subcategories: [{
+                                        id: f.id + 10000,
+                                        title: 'Général (Sous-catégorie par défaut)',
+                                        columns: f.columns || 2,
+                                        cards: f.cards || []
+                                    }]
+                                }));
+                            } 
+                            // 3. Système actuel (3 niveaux)
+                            else if (parsed.categories) {
+                                this.categories = parsed.categories;
                             }
                             
                             if (parsed.settings) {
                                 this.settings = { ...this.settings, ...parsed.settings };
-                                // S'assurer que les nouvelles clés existent si le state est vieux
                                 if(!this.settings.bgType) this.settings.bgType = 'color';
                             }
                             
@@ -596,11 +752,12 @@
                 },
 
                 resetDefaults() {
-                    if(confirm("Attention : Cela effacera tous vos dossiers et réglages. Continuer ?")) {
+                    if(confirm("Attention : Cela effacera toutes vos catégories, sous-catégories, cartes et réglages. Continuer ?")) {
                         localStorage.removeItem('mssLinktreeState');
                         this.settings = JSON.parse(JSON.stringify(defaultState.settings));
-                        this.folders = JSON.parse(JSON.stringify(defaultState.folders));
-                        this.currentFolderId = null;
+                        this.categories = JSON.parse(JSON.stringify(defaultState.categories));
+                        this.currentCategoryId = null;
+                        this.currentSubcategoryId = null;
                         this.adminView = 'main';
                     }
                 }
