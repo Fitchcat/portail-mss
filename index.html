@@ -135,6 +135,26 @@
                                 </div>
                             </div>
 
+                            <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Musique de fond (Optionnelle)</label>
+                                <div x-data="{ isDragging: false }" 
+                                     @dragover.prevent="isDragging = true" 
+                                     @dragleave.prevent="isDragging = false" 
+                                     @drop.prevent="isDragging = false; processFileUpload($event.dataTransfer.files[0], res => settings.bgAudioUrl = res)"
+                                     class="relative border-2 border-dashed rounded p-3 text-center cursor-pointer transition-colors"
+                                     :class="isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'">
+                                    <input type="file" accept="audio/*" @change="e => { processFileUpload(e.target.files[0], res => settings.bgAudioUrl = res); e.target.value=''; }" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" title="">
+                                    <span class="text-xs text-slate-500 font-semibold flex items-center justify-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                        <span x-text="isDragging ? 'Relâchez pour ajouter' : 'Glisser-déposer un fichier MP3'"></span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between mt-2" x-show="settings.bgAudioUrl">
+                                    <div class="text-[10px] text-slate-500 truncate flex-1" x-text="settings.bgAudioUrl"></div>
+                                    <button @click="settings.bgAudioUrl = ''; saveState()" class="text-xs text-red-500 hover:text-red-700 font-semibold ml-2">Supprimer</button>
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-4 pt-2">
                                 <div>
                                     <label class="block text-xs font-semibold mb-1 text-slate-600">Texte principal</label>
@@ -536,6 +556,19 @@
                     </a>
                 </div>
 
+                <!-- Lecteur Audio Flottant -->
+                <template x-if="settings.bgAudioUrl">
+                    <button @click="toggleAudio()" 
+                            class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                            :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`"
+                            title="Musique de fond">
+                        <i :class="audioPlaying ? 'ph ph-speaker-high text-2xl' : 'ph ph-speaker-slash text-2xl'"></i>
+                    </button>
+                </template>
+                <template x-if="settings.bgAudioUrl">
+                    <audio x-ref="bgAudioPlayer" :src="settings.bgAudioUrl" loop preload="auto"></audio>
+                </template>
+
             </div>
         </div>
     </div>
@@ -550,6 +583,7 @@
                 buttonTextColor: '#5b7065',
                 bgImage: '',
                 bgVideo: '',
+                bgAudioUrl: 'Video/musicFocus.MP3',
                 logoUrl: 'https://i.ibb.co/3s7s6qM/logo-mss.png',
                 title: 'My Sport Business Tools',
                 description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez une catégorie ci-dessous.',
@@ -597,10 +631,27 @@
                 categories: JSON.parse(JSON.stringify(defaultState.categories)),
                 nextId: 2000,
                 presetIcons: iconsList,
+                audioPlaying: false,
 
                 init() {
                     this.loadState();
                     if(this.categories.length === 0) this.editMode = true;
+                },
+
+                toggleAudio() {
+                    const audioEl = this.$refs.bgAudioPlayer;
+                    if (!audioEl) return;
+                    if (this.audioPlaying) {
+                        audioEl.pause();
+                        this.audioPlaying = false;
+                    } else {
+                        audioEl.play().then(() => {
+                            this.audioPlaying = true;
+                        }).catch(e => {
+                            console.error("Lecture audio bloquée", e);
+                            this.audioPlaying = false;
+                        });
+                    }
                 },
 
                 // --- Getters Admin ---
