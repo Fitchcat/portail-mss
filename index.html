@@ -120,7 +120,7 @@
                             <div x-show="settings.bgType === 'video'" class="space-y-2">
                                 <label class="block text-xs font-semibold mb-1 text-slate-600">Vidéo de fond (URL recommandée)</label>
                                 <input type="text" x-model="settings.bgVideo" @input="saveState" placeholder="Lien de la vidéo MP4 (https://...)" class="w-full text-sm p-2 border rounded mb-2">
-                                <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou (fichiers légers < 3Mo)</div>
+                                <div class="text-[10px] text-center text-slate-400 font-bold uppercase">ou (fichiers légers < 10Mo)</div>
                                 <div x-data="{ isDragging: false }" 
                                      @dragover.prevent="isDragging = true" 
                                      @dragleave.prevent="isDragging = false" 
@@ -173,6 +173,14 @@
                                     <div class="flex items-center gap-2">
                                         <input type="color" x-model="settings.buttonTextColor" @input="saveState" class="w-8 h-8 rounded cursor-pointer border-0 p-0">
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <label class="block text-xs font-semibold mb-2 text-slate-600">Disposition des Catégories (Niveau 1)</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="range" min="1" max="6" x-model="settings.categoriesColumns" @input="saveState" class="flex-1 accent-[#1e3a8a]">
+                                    <span class="text-sm font-bold w-12 text-center bg-slate-100 py-1 rounded" x-text="(settings.categoriesColumns || 1) + ' col'"></span>
                                 </div>
                             </div>
                         </section>
@@ -296,6 +304,14 @@
                                             <span x-text="isDragging ? 'Relâchez pour ajouter' : 'Glisser-déposer ou cliquer'"></span>
                                         </span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 mt-4">
+                                <label class="block text-xs font-semibold mb-2 text-slate-600">Disposition des Sous-catégories (Niveau 2)</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="range" min="1" max="6" x-model="activeCategory.columns" @input="saveState" class="flex-1 accent-[#1e3a8a]">
+                                    <span class="text-sm font-bold w-12 text-center bg-slate-100 py-1 rounded" x-text="(activeCategory.columns || 1) + ' col'"></span>
                                 </div>
                             </div>
                         </div>
@@ -435,7 +451,14 @@
                     
                     <!-- VUE 1 : LISTE DES CATEGORIES -->
                     <template x-if="!currentCategoryId">
-                        <div class="w-full max-w-[480px] mx-auto space-y-4 animate-fade-in">
+                        <div class="grid gap-4 mx-auto animate-fade-in"
+                             :class="[
+                                'grid-cols-1', 
+                                (settings.categoriesColumns || 1) > 1 ? 'sm:grid-cols-2' : '',
+                                (settings.categoriesColumns || 1) > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + (settings.categoriesColumns || 1),
+                                'lg:grid-cols-' + (settings.categoriesColumns || 1)
+                             ].filter(Boolean).join(' ')"
+                             :style="(settings.categoriesColumns || 1) == 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
                             <template x-for="cat in categories" :key="cat.id">
                                 <button @click="openCategory(cat.id)" 
                                         class="link-button group w-full flex items-center gap-4 p-4 rounded-2xl shadow-sm relative overflow-hidden text-left"
@@ -468,16 +491,24 @@
 
                     <!-- VUE 2 : LISTE DES SOUS-CATEGORIES -->
                     <template x-if="currentCategoryId && !currentSubcategoryId && currentCategory">
-                        <div class="w-full max-w-[480px] mx-auto animate-fade-in">
-                            <div class="mb-6 flex items-center gap-4">
+                        <div class="w-full animate-fade-in">
+                            <div class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
                                 <button @click="closeCategory()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-transform hover:-translate-x-1" :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     Retour
                                 </button>
-                                <h2 class="text-xl md:text-2xl font-bold drop-shadow-md" x-text="currentCategory.title"></h2>
+                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md" x-text="currentCategory.title"></h2>
+                                <div class="hidden md:block w-24"></div>
                             </div>
 
-                            <div class="space-y-4">
+                            <div class="grid gap-4 mx-auto"
+                                 :class="[
+                                    'grid-cols-1', 
+                                    (currentCategory.columns || 1) > 1 ? 'sm:grid-cols-2' : '',
+                                    (currentCategory.columns || 1) > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + (currentCategory.columns || 1),
+                                    'lg:grid-cols-' + (currentCategory.columns || 1)
+                                 ].filter(Boolean).join(' ')"
+                                 :style="(currentCategory.columns || 1) == 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
                                 <template x-for="sub in currentCategory.subcategories" :key="sub.id">
                                     <button @click="openSubcategory(sub.id)" 
                                             class="link-button group w-full flex items-center gap-4 p-4 rounded-2xl shadow-sm relative overflow-hidden text-left"
@@ -576,6 +607,7 @@
     <script>
         const defaultState = {
             settings: {
+                categoriesColumns: 1,
                 bgType: 'color', // 'color', 'image', 'video'
                 bgColor: '#5b7065',
                 textColor: '#ffffff',
@@ -592,6 +624,7 @@
                 { 
                     id: 1, 
                     title: 'Outils & Simulateurs', 
+                    columns: 1,
                     subcategories: [
                         {
                             id: 101,
@@ -734,8 +767,8 @@
                 // --- Uploads ---
                 processFileUpload(file, callback) {
                     if (file) {
-                        if (file.size > 3 * 1024 * 1024) { 
-                            alert("Le fichier est trop lourd (limite ~3Mo). Préférez utiliser une URL (lien) pour les gros fichiers.");
+                        if (file.size > 10 * 1024 * 1024) { 
+                            alert("Le fichier est trop lourd (limite ~10Mo). Préférez utiliser une URL (lien) pour les gros fichiers.");
                             return;
                         }
                         const reader = new FileReader();
