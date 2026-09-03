@@ -724,7 +724,7 @@
                     const passVal = this.authPassword || document.getElementById('authPassword').value;
 
                     const { error } = await this.supabase.auth.signInWithPassword({
-                        email: emailVal.trim(),
+                        email: emailVal.trim().toLowerCase(),
                         password: passVal,
                     });
                     if (error) {
