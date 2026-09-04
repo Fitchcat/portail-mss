@@ -104,7 +104,57 @@
                         
                         <!-- Section Arrière-plan & Couleurs -->
                         <section class="space-y-4">
-                            <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider border-b pb-2">1. Design & Fond</h3>
+                            <div class="flex items-center justify-between border-b pb-2">
+                                <h3 class="font-bold text-slate-400 uppercase text-xs tracking-wider">1. Design & Fond</h3>
+                                <button @click="mediaLibraryOpen = !mediaLibraryOpen" class="text-xs text-[#1e3a8a] font-bold hover:underline flex items-center gap-1">
+                                    <i class="ph-bold ph-images"></i> Librairie Médias
+                                </button>
+                            </div>
+
+                            <!-- LIBRAIRIE MEDIAS -->
+                            <div x-show="mediaLibraryOpen" x-collapse>
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="flex border-b border-slate-200 overflow-x-auto admin-scroll">
+                                        <button @click="mediaLibraryTab = 'colors'" class="flex-1 px-3 py-2 text-xs font-bold whitespace-nowrap" :class="mediaLibraryTab === 'colors' ? 'bg-white text-[#1e3a8a] border-b-2 border-[#1e3a8a]' : 'text-slate-500 hover:bg-slate-100'">Couleurs</button>
+                                        <button @click="mediaLibraryTab = 'images'" class="flex-1 px-3 py-2 text-xs font-bold whitespace-nowrap" :class="mediaLibraryTab === 'images' ? 'bg-white text-[#1e3a8a] border-b-2 border-[#1e3a8a]' : 'text-slate-500 hover:bg-slate-100'">Images</button>
+                                        <button @click="mediaLibraryTab = 'videos'" class="flex-1 px-3 py-2 text-xs font-bold whitespace-nowrap" :class="mediaLibraryTab === 'videos' ? 'bg-white text-[#1e3a8a] border-b-2 border-[#1e3a8a]' : 'text-slate-500 hover:bg-slate-100'">Vidéos</button>
+                                        <button @click="mediaLibraryTab = 'audios'" class="flex-1 px-3 py-2 text-xs font-bold whitespace-nowrap" :class="mediaLibraryTab === 'audios' ? 'bg-white text-[#1e3a8a] border-b-2 border-[#1e3a8a]' : 'text-slate-500 hover:bg-slate-100'">Musiques</button>
+                                    </div>
+                                    <div class="p-4 max-h-60 overflow-y-auto admin-scroll">
+                                        <!-- Colors -->
+                                        <div x-show="mediaLibraryTab === 'colors'" class="grid grid-cols-5 gap-3">
+                                            <template x-for="c in presetColors">
+                                                <button @click="settings.bgType = 'color'; settings.bgColor = c; saveState()" class="w-full aspect-square rounded-full shadow-sm hover:scale-110 transition-transform border border-black/10" :style="`background-color: ${c}`"></button>
+                                            </template>
+                                        </div>
+                                        <!-- Images -->
+                                        <div x-show="mediaLibraryTab === 'images'" class="grid grid-cols-2 gap-2">
+                                            <template x-for="img in presetImages">
+                                                <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
+                                                    <img :src="img" class="w-full h-full object-cover">
+                                                </button>
+                                            </template>
+                                        </div>
+                                        <!-- Videos -->
+                                        <div x-show="mediaLibraryTab === 'videos'" class="grid grid-cols-2 gap-2">
+                                            <template x-for="vid in presetVideos">
+                                                <button @click="settings.bgType = 'video'; settings.bgVideo = vid; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-black relative flex items-center justify-center group">
+                                                    <video :src="vid" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
+                                                    <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
+                                                </button>
+                                            </template>
+                                        </div>
+                                        <!-- Audios -->
+                                        <div x-show="mediaLibraryTab === 'audios'" class="flex flex-col gap-2">
+                                            <template x-for="audio in presetAudios">
+                                                <button @click="settings.bgAudioUrl = audio.url; saveState()" class="w-full text-left p-2 text-xs font-semibold rounded hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 border border-slate-100 bg-white">
+                                                    <i class="ph-bold ph-music-notes text-lg"></i> <span x-text="audio.name"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-slate-600">Type d'arrière-plan</label>
@@ -559,6 +609,10 @@
                                                 <input type="url" x-model="card.url" @input="saveState" placeholder="https://..." class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-blue-600">
                                             </div>
                                             <div>
+                                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Description / Commentaire (Optionnel)</label>
+                                                <textarea x-model="card.description" @input="saveState" placeholder="Ajouter une courte note..." rows="2" class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-slate-600 resize-none"></textarea>
+                                            </div>
+                                            <div>
                                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">Déplacer vers...</label>
                                                 <select class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-slate-700 bg-slate-50"
                                                         @change="moveCard(card, index, $event.target.value); $event.target.value = ''">
@@ -622,25 +676,45 @@
                             </h2>
                             <div class="grid gap-4 md:gap-6 mx-auto grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-5xl">
                                 <template x-for="card in searchResults" :key="card.id">
-                                    <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
-                                       class="link-button flex flex-col rounded-2xl shadow-sm overflow-hidden relative group"
-                                       :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
-                                        
-                                        <template x-if="card.iconType === 'custom' && card.iconValue">
-                                            <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
-                                                <img :src="card.iconValue" alt="Card Image" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                                    <div x-data="{ showInfo: false }" class="relative rounded-2xl shadow-sm overflow-hidden group">
+                                        <!-- Lien Principal -->
+                                        <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
+                                           class="link-button flex flex-col h-full"
+                                           :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                            
+                                            <template x-if="card.iconType === 'custom' && card.iconValue">
+                                                <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
+                                                    <img :src="card.iconValue" alt="Card Image" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                                                </div>
+                                            </template>
+                                            <template x-if="!card.iconType || card.iconType === 'preset'">
+                                                <div class="w-full aspect-video bg-transparent flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-white">
+                                                    <i :class="'text-6xl ' + getIconClass(card.iconValue)"></i>
+                                                </div>
+                                            </template>
+                                            
+                                            <div class="p-4 flex-1 flex flex-col justify-center text-center">
+                                                <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
                                             </div>
+                                        </a>
+
+                                        <!-- Bouton Plus -->
+                                        <template x-if="card.description && card.description.trim() !== ''">
+                                            <button @click.prevent="showInfo = true" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 backdrop-blur-sm shadow-sm transition-colors z-10">
+                                                <i class="ph-bold ph-plus"></i>
+                                            </button>
                                         </template>
-                                        <template x-if="!card.iconType || card.iconType === 'preset'">
-                                            <div class="w-full aspect-video bg-transparent flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-white">
-                                                <i :class="'text-6xl ' + getIconClass(card.iconValue)"></i>
-                                            </div>
-                                        </template>
-                                        
-                                        <div class="p-4 flex-1 flex flex-col justify-center text-center">
-                                            <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
+
+                                        <!-- Overlay Description -->
+                                        <div x-show="showInfo" x-transition.opacity
+                                             class="absolute inset-0 bg-black/80 backdrop-blur-md p-5 flex flex-col justify-center items-center text-center z-20 cursor-pointer"
+                                             @click="showInfo = false" style="display: none;">
+                                            <p class="text-white text-sm font-medium leading-relaxed drop-shadow-sm" x-text="card.description"></p>
+                                            <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
+                                                <i class="ph-bold ph-x"></i>
+                                            </button>
                                         </div>
-                                    </a>
+                                    </div>
                                 </template>
                             </div>
                             <div x-show="searchResults.length === 0" class="text-center py-12 opacity-70" :style="settings.bgType !== 'color' ? 'color: white' : `color: ${settings.textColor}`">
@@ -772,27 +846,47 @@
                                      s.option('disabled', !editMode);
                                  ">
                                 <template x-for="card in currentSubcategory.cards" :key="card.id">
-                                    <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
-                                       class="link-button flex flex-col rounded-2xl shadow-sm overflow-hidden relative group"
-                                       :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
-                                        
-                                        <!-- Image personnalisée -->
-                                        <template x-if="card.iconType === 'custom' && card.iconValue">
-                                            <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
-                                                <img :src="card.iconValue" alt="Card Image" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                                    <div x-data="{ showInfo: false }" class="relative rounded-2xl shadow-sm overflow-hidden group">
+                                        <!-- Lien Principal -->
+                                        <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
+                                           class="link-button flex flex-col h-full"
+                                           :style="`background-color: ${settings.buttonBgColor}; color: ${settings.buttonTextColor}`">
+                                            
+                                            <!-- Image personnalisée -->
+                                            <template x-if="card.iconType === 'custom' && card.iconValue">
+                                                <div class="w-full aspect-video bg-slate-100 relative overflow-hidden shrink-0 border-b border-black/5">
+                                                    <img :src="card.iconValue" alt="Card Image" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                                                </div>
+                                            </template>
+                                            <!-- Icône prédéfinie -->
+                                            <template x-if="!card.iconType || card.iconType === 'preset'">
+                                                <div class="w-full aspect-video bg-transparent flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-white">
+                                                    <i :class="'text-6xl ' + getIconClass(card.iconValue)"></i>
+                                                </div>
+                                            </template>
+                                            
+                                            <div class="p-4 flex-1 flex flex-col justify-center text-center">
+                                                <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
                                             </div>
+                                        </a>
+
+                                        <!-- Bouton Plus -->
+                                        <template x-if="card.description && card.description.trim() !== ''">
+                                            <button @click.prevent="showInfo = true" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 backdrop-blur-sm shadow-sm transition-colors z-10">
+                                                <i class="ph-bold ph-plus"></i>
+                                            </button>
                                         </template>
-                                        <!-- Icône prédéfinie -->
-                                        <template x-if="!card.iconType || card.iconType === 'preset'">
-                                            <div class="w-full aspect-video bg-transparent flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-white">
-                                                <i :class="'text-6xl ' + getIconClass(card.iconValue)"></i>
-                                            </div>
-                                        </template>
-                                        
-                                        <div class="p-4 flex-1 flex flex-col justify-center text-center">
-                                            <h3 class="font-bold text-sm md:text-base" x-text="card.title || 'Carte sans titre'"></h3>
+
+                                        <!-- Overlay Description -->
+                                        <div x-show="showInfo" x-transition.opacity
+                                             class="absolute inset-0 bg-black/80 backdrop-blur-md p-5 flex flex-col justify-center items-center text-center z-20 cursor-pointer"
+                                             @click="showInfo = false" style="display: none;">
+                                            <p class="text-white text-sm font-medium leading-relaxed drop-shadow-sm" x-text="card.description"></p>
+                                            <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
+                                                <i class="ph-bold ph-x"></i>
+                                            </button>
                                         </div>
-                                    </a>
+                                    </div>
                                 </template>
                             </div>
                             <div x-show="currentSubcategory.cards.length === 0" class="text-center py-8 opacity-70">
@@ -960,6 +1054,30 @@
                 
                 searchQuery: '',
                 sidebarOpen: window.innerWidth >= 1024,
+
+                presetColors: ['#1e3a8a', '#0f172a', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#14b8a6', '#f43f5e', '#64748b', '#ffffff', '#000000'],
+                presetImages: [
+                    'https://images.unsplash.com/photo-1506744626753-1fa28f6e3c03?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920'
+                ],
+                presetVideos: [
+                    'https://cdn.pixabay.com/video/2016/08/22/4762-179738669_large.mp4',
+                    'https://cdn.pixabay.com/video/2018/06/17/16769-275143362_large.mp4',
+                    'https://cdn.pixabay.com/video/2019/11/04/28731-371452934_large.mp4',
+                    'https://cdn.pixabay.com/video/2015/09/21/722-139745585_large.mp4'
+                ],
+                presetAudios: [
+                    { name: 'LoFi Chill', url: 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3' },
+                    { name: 'Corporate Tech', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_27606e10db.mp3' },
+                    { name: 'Ambient Piano', url: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+                    { name: 'Acoustic Guitar', url: 'https://cdn.pixabay.com/audio/2021/08/25/audio_981a8c983a.mp3' }
+                ],
+                mediaLibraryOpen: false,
+                mediaLibraryTab: 'colors',
 
                 supabase: null,
                 session: null,
