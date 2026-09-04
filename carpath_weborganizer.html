@@ -1071,7 +1071,6 @@
 
                 settings: JSON.parse(JSON.stringify(defaultState.settings)),
                 categories: JSON.parse(JSON.stringify(defaultState.categories)),
-                nextId: 2000,
                 presetIcons: iconsList,
                 audioPlaying: false,
                 
@@ -1325,10 +1324,12 @@
                 handleCardImagePaste(card) { this.pasteImageFromClipboard((res) => card.image = res); },
 
                 // --- Gestion des Données ---
+                generateId() {
+                    return Date.now() + Math.floor(Math.random() * 1000);
+                },
                 addCategory() {
-                    this.nextId++;
                     this.categories.push({
-                        id: this.nextId,
+                        id: this.generateId(),
                         title: 'Nouvelle Catégorie',
                         subcategories: []
                     });
@@ -1346,9 +1347,8 @@
                 },
                 addSubcategory() {
                     if(!this.activeCategory) return;
-                    this.nextId++;
                     this.activeCategory.subcategories.push({
-                        id: this.nextId,
+                        id: this.generateId(),
                         title: 'Nouvelle Sous-catégorie',
                         columns: 2,
                         cards: []
@@ -1368,9 +1368,8 @@
                 },
                 addCard() {
                     if(!this.activeSubcategory) return;
-                    this.nextId++;
                     this.activeSubcategory.cards.push({
-                        id: this.nextId,
+                        id: this.generateId(),
                         title: 'Nouvelle carte',
                         image: '',
                         url: 'https://'
