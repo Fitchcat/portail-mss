@@ -259,7 +259,7 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="categories.length"></span>
                             </h3>
                             
-                            <div class="space-y-3" x-sort="categories = $event; saveState()">
+                            <div class="space-y-3" x-sort="handleSort('categories', $event)">
                                 <template x-for="(cat, index) in categories" :key="cat.id">
                                     <div x-sort:item="cat" class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
                                         <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
@@ -370,7 +370,7 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeCategory.subcategories.length"></span>
                             </h3>
 
-                            <div class="space-y-3" x-sort="activeCategory.subcategories = $event; saveState()">
+                            <div class="space-y-3" x-sort="handleSort('subcategories', $event)">
                                 <template x-for="(sub, index) in activeCategory.subcategories" :key="sub.id">
                                     <div x-sort:item="sub" class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
                                         <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
@@ -483,7 +483,7 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeSubcategory.cards.length"></span>
                             </h3>
 
-                            <div class="space-y-4" x-sort="activeSubcategory.cards = $event; saveState()">
+                            <div class="space-y-4" x-sort="handleSort('cards', $event)">
                                 <template x-for="(card, index) in activeSubcategory.cards" :key="card.id">
                                     <div x-sort:item="card" x-data="{ expanded: false }" class="bg-white border border-slate-200 p-3 rounded-lg relative shadow-sm group">
                                         
@@ -1109,8 +1109,21 @@
                     if (targetSub) {
                         this.activeSubcategory.cards.splice(currentIndex, 1);
                         targetSub.cards.push(card);
+                        this.categories = [...this.categories]; // Force Alpine reactivity
                         this.saveState();
                     }
+                },
+                handleSort(type, newArray) {
+                    if (type === 'categories') {
+                        this.categories = newArray;
+                    } else if (type === 'subcategories') {
+                        this.activeCategory.subcategories = newArray;
+                        this.categories = [...this.categories]; // Force reactivity
+                    } else if (type === 'cards') {
+                        this.activeSubcategory.cards = newArray;
+                        this.categories = [...this.categories]; // Force reactivity
+                    }
+                    this.saveState();
                 },
 
                 async saveState() {
