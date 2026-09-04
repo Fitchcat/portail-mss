@@ -161,13 +161,6 @@
                                         </div>
                                         <!-- Images -->
                                         <div x-show="mediaLibraryTab === 'images'" class="space-y-4">
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <template x-for="img in presetImages">
-                                                    <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
-                                                        <img :src="img" class="w-full h-full object-cover">
-                                                    </button>
-                                                </template>
-                                            </div>
                                             <template x-if="settings.custom_images && settings.custom_images.length > 0">
                                                 <div>
                                                     <h4 class="text-xs font-bold text-slate-500 mb-2">Vos images ajoutées</h4>
@@ -177,23 +170,22 @@
                                                                 <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full h-full rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
                                                                     <img :src="img" class="w-full h-full object-cover">
                                                                 </button>
-                                                                <button @click.stop="settings.custom_images.splice(index, 1); saveState()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"><i class="ph-bold ph-trash"></i></button>
+                                                                <button @click.stop="settings.custom_images.splice(index, 1); saveState()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"><i class="ph-bold ph-x text-[10px]"></i></button>
                                                             </div>
                                                         </template>
                                                     </div>
                                                 </div>
                                             </template>
-                                        </div>
-                                        <!-- Videos -->
-                                        <div x-show="mediaLibraryTab === 'videos'" class="space-y-4">
                                             <div class="grid grid-cols-2 gap-2">
-                                                <template x-for="vid in presetVideos">
-                                                    <button @click="settings.bgType = 'video'; settings.bgVideo = vid.split('#')[0]; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-black relative flex items-center justify-center group">
-                                                        <video :src="vid" preload="metadata" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
-                                                        <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
+                                                <template x-for="img in presetImages">
+                                                    <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
+                                                        <img :src="img" class="w-full h-full object-cover">
                                                     </button>
                                                 </template>
                                             </div>
+                                        </div>
+                                        <!-- Videos -->
+                                        <div x-show="mediaLibraryTab === 'videos'" class="space-y-4">
                                             <template x-if="settings.custom_videos && settings.custom_videos.length > 0">
                                                 <div>
                                                     <h4 class="text-xs font-bold text-slate-500 mb-2">Vos vidéos ajoutées</h4>
@@ -204,15 +196,38 @@
                                                                     <video :src="vid + '#t=0.1'" preload="metadata" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
                                                                     <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
                                                                 </button>
-                                                                <button @click.stop="settings.custom_videos.splice(index, 1); saveState()" class="absolute top-1 right-1 z-10 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"><i class="ph-bold ph-trash"></i></button>
+                                                                <button @click.stop="settings.custom_videos.splice(index, 1); saveState()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"><i class="ph-bold ph-x text-[10px]"></i></button>
                                                             </div>
                                                         </template>
                                                     </div>
                                                 </div>
                                             </template>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <template x-for="vid in presetVideos">
+                                                    <button @click="settings.bgType = 'video'; settings.bgVideo = vid.split('#')[0]; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-black relative flex items-center justify-center group">
+                                                        <video :src="vid" preload="metadata" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
+                                                        <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
+                                                    </button>
+                                                </template>
+                                            </div>
                                         </div>
                                         <!-- Audios -->
                                         <div x-show="mediaLibraryTab === 'audios'" class="space-y-4">
+                                            <template x-if="settings.custom_audios && settings.custom_audios.length > 0">
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-slate-500 mb-2">Vos musiques ajoutées</h4>
+                                                    <div class="flex flex-col gap-2">
+                                                        <template x-for="(aud, index) in settings.custom_audios">
+                                                            <div class="relative flex items-center gap-2 w-full p-2 text-xs font-semibold rounded border border-slate-100 bg-white">
+                                                                <button @click="settings.bgAudioUrl = aud; saveState()" class="flex-1 text-left hover:text-blue-600 transition-colors flex items-center gap-2 truncate">
+                                                                    <i class="ph-bold ph-music-notes text-lg"></i> <span class="truncate" x-text="'Musique ' + (index+1)"></span>
+                                                                </button>
+                                                                <button @click.stop="settings.custom_audios.splice(index, 1); saveState()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-full transition-colors flex items-center justify-center"><i class="ph-bold ph-x"></i></button>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
                                             <div class="flex flex-col gap-2">
                                                 <template x-for="audio in presetAudios">
                                                     <button @click="settings.bgAudioUrl = audio.url; saveState()" class="w-full text-left p-2 text-xs font-semibold rounded hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 border border-slate-100 bg-white">
@@ -220,21 +235,6 @@
                                                     </button>
                                                 </template>
                                             </div>
-                                            <template x-if="settings.custom_audios && settings.custom_audios.length > 0">
-                                                <div>
-                                                    <h4 class="text-xs font-bold text-slate-500 mb-2">Vos musiques ajoutées</h4>
-                                                    <div class="flex flex-col gap-2">
-                                                        <template x-for="(aud, index) in settings.custom_audios">
-                                                            <div class="relative group flex items-center gap-2 w-full p-2 text-xs font-semibold rounded border border-slate-100 bg-white">
-                                                                <button @click="settings.bgAudioUrl = aud; saveState()" class="flex-1 text-left hover:text-blue-600 transition-colors flex items-center gap-2 truncate">
-                                                                    <i class="ph-bold ph-music-notes text-lg"></i> <span class="truncate" x-text="'Musique ' + (index+1)"></span>
-                                                                </button>
-                                                                <button @click.stop="settings.custom_audios.splice(index, 1); saveState()" class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph-bold ph-trash"></i></button>
-                                                            </div>
-                                                        </template>
-                                                    </div>
-                                                </div>
-                                            </template>
                                         </div>
                                     </div>
                                 </div>
