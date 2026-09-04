@@ -138,7 +138,12 @@
                                     </span>
                                 </div>
                                 <div class="text-[10px] text-center text-slate-400 font-bold uppercase my-1">ou</div>
-                                <input type="text" x-model="settings.bgImage" @input="saveState" placeholder="Lien de l'image (https://...)" class="w-full text-sm p-2 border rounded">
+                                <div class="flex gap-2">
+                                    <input type="text" x-model="settings.bgImage" @input="saveState" placeholder="Lien de l'image (https://...)" class="flex-1 text-sm p-2 border rounded">
+                                    <button @click="handleBgPaste" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold flex items-center gap-1 transition-colors">
+                                        📋 Coller
+                                    </button>
+                                </div>
                             </div>
 
                             <div x-show="settings.bgType === 'video'" class="space-y-2">
@@ -227,7 +232,12 @@
                                             <span x-text="isDragging ? 'Relâchez pour ajouter' : 'Glisser-déposer ou cliquer'"></span>
                                         </span>
                                     </div>
-                                    <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="Lien (https://...)" class="w-full text-sm p-2 border rounded">
+                                    <div class="flex gap-2">
+                                        <input type="text" x-model="settings.logoUrl" @input="saveState" placeholder="Lien (https://...)" class="flex-1 text-sm p-2 border rounded">
+                                        <button @click="handleLogoPaste" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold flex items-center gap-1 transition-colors">
+                                            📋 Coller
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -435,7 +445,12 @@
                                                         <span x-text="isDragging ? 'Relâchez l\'image' : 'Glisser-déposer ou cliquer'"></span>
                                                     </span>
                                                 </div>
-                                                <input type="text" x-model="card.image" @input="saveState" placeholder="Ou coller l'URL de l'image" class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500">
+                                                <div class="flex gap-2">
+                                                    <input type="text" x-model="card.image" @input="saveState" placeholder="URL de l'image" class="flex-1 text-xs p-1.5 border rounded outline-none focus:border-blue-500">
+                                                    <button @click="handleCardImagePaste(card)" type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-[10px] font-semibold flex items-center gap-1 transition-colors">
+                                                        📋 Coller
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div>
                                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">URL (Cible du clic)</label>
@@ -854,10 +869,37 @@
                         reader.readAsDataURL(file);
                     }
                 },
+                
+                async pasteImageFromClipboard(callback) {
+                    try {
+                        const clipboardItems = await navigator.clipboard.read();
+                        for (const clipboardItem of clipboardItems) {
+                            for (const type of clipboardItem.types) {
+                                if (type.startsWith('image/')) {
+                                    const blob = await clipboardItem.getType(type);
+                                    const file = new File([blob], "pasted-image.png", { type: blob.type });
+                                    this.processFileUpload(file, callback);
+                                    return;
+                                }
+                            }
+                        }
+                        alert("Aucune image trouvée dans le presse-papiers.");
+                    } catch (err) {
+                        console.error(err);
+                        alert("Impossible de lire le presse-papiers. Vérifiez les autorisations de votre navigateur.");
+                    }
+                },
+
                 handleLogoUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.logoUrl = res); },
+                handleLogoPaste() { this.pasteImageFromClipboard((res) => this.settings.logoUrl = res); },
+                
                 handleBgImageUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.bgImage = res); },
+                handleBgPaste() { this.pasteImageFromClipboard((res) => this.settings.bgImage = res); },
+                
                 handleBgVideoUpload(event) { this.processFileUpload(event.target.files[0], (res) => this.settings.bgVideo = res); },
+                
                 handleCardImageUpload(event, card) { this.processFileUpload(event.target.files[0], (res) => card.image = res); },
+                handleCardImagePaste(card) { this.pasteImageFromClipboard((res) => card.image = res); },
 
                 // --- Gestion des Données ---
                 addCategory() {
