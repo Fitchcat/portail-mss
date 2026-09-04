@@ -739,7 +739,7 @@
                                         </template>
                                         <!-- Icône prédéfinie -->
                                         <template x-if="!card.iconType || card.iconType === 'preset'">
-                                            <div class="w-full aspect-video bg-slate-100/50 flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-[#1e3a8a]/40">
+                                            <div class="w-full aspect-video bg-transparent flex items-center justify-center relative overflow-hidden shrink-0 border-b border-black/5 text-white">
                                                 <i :class="'text-6xl ' + getIconClass(card.iconValue)"></i>
                                             </div>
                                         </template>
