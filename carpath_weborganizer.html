@@ -57,8 +57,8 @@
         <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold" x-text="editMode ? 'Fermer' : 'Éditer la page'"></span>
     </button>
 
-    <!-- Écran de chargement -->
-    <div x-show="isLoading" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-300">
+    <!-- Écran de chargement (Vanilla JS) -->
+    <div id="app-loader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-300">
         <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -66,7 +66,8 @@
         <p class="text-sm font-semibold animate-pulse tracking-wide">Chargement de votre portail...</p>
     </div>
 
-    <div class="flex h-screen w-full overflow-hidden flex-row" x-show="!isLoading" style="display: none;">
+    <!-- Conteneur principal -->
+    <div id="main-ui" class="flex h-screen w-full overflow-hidden flex-row" style="display: none;">
         
         <!-- Panneau d'administration (Gauche) -->
         <div x-show="editMode" 
@@ -1095,7 +1096,7 @@
                 authPassword: '',
                 authError: '',
                 authLoading: false,
-                isLoading: true, // Nouvelle variable pour bloquer l'affichage du defaultState
+                authLoading: false,
 
                 async init() {
                     try {
@@ -1116,7 +1117,10 @@
                     } catch (e) {
                         console.error("Erreur critique lors de l'initialisation :", e);
                     } finally {
-                        this.isLoading = false;
+                        const loader = document.getElementById('app-loader');
+                        const mainUI = document.getElementById('main-ui');
+                        if (loader) loader.style.display = 'none';
+                        if (mainUI) mainUI.style.display = 'flex';
                     }
                 },
 
