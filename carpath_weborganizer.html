@@ -31,6 +31,19 @@
                 'lg:grid-cols-4', 'lg:grid-cols-5', 'lg:grid-cols-6'
             ]
         }
+
+        // Failsafe Ultime : Garantit que l'écran de chargement disparaît même en cas d'erreur fatale de navigateur ou de CDN bloqué
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('app-loader');
+                const mainUI = document.getElementById('main-ui');
+                if (loader && loader.style.display !== 'none') {
+                    console.warn("Failsafe activé : chargement forcé.");
+                    loader.style.display = 'none';
+                    if (mainUI) mainUI.style.display = 'flex';
+                }
+            }, 3000);
+        });
     </script>
 </head>
 <body x-data="linktreeApp()" class="min-h-screen relative transition-colors duration-300" :style="bodyStyle()">
