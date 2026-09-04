@@ -1047,7 +1047,7 @@
                                 <div x-show="currentCategoryId === cat.id" x-collapse>
                                     <div class="pl-4 pr-2 py-2 space-y-1">
                                         <template x-for="sub in cat.subcategories" :key="sub.id">
-                                            <button @click="searchQuery = ''; openSubcategory(cat.id, sub.id); if(window.innerWidth < 1024) sidebarOpen = false"
+                                            <button @click="searchQuery = ''; openSubcategory(sub.id); if(window.innerWidth < 1024) sidebarOpen = false"
                                                     class="w-full text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 text-sm"
                                                     :class="currentSubcategoryId === sub.id ? 'bg-blue-500/20 text-blue-300 font-semibold' : 'text-white/60 hover:bg-white/5 hover:text-white'">
                                                 <i class="ph-fill ph-folder text-lg" :class="currentSubcategoryId === sub.id ? 'text-blue-400' : 'text-white/40'"></i>
@@ -1297,7 +1297,12 @@
                 // --- Navigation Public ---
                 openCategory(id) {
                     this.currentCategoryId = id;
-                    this.currentSubcategoryId = null;
+                    const cat = this.categories.find(c => c.id === id);
+                    if (cat && cat.subcategories && cat.subcategories.length > 0) {
+                        this.currentSubcategoryId = cat.subcategories[0].id;
+                    } else {
+                        this.currentSubcategoryId = null;
+                    }
                 },
                 closeCategory() {
                     this.currentCategoryId = null;
