@@ -176,11 +176,14 @@
                                                     </div>
                                                 </div>
                                             </template>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <template x-for="img in presetImages">
-                                                    <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
-                                                        <img :src="img" class="w-full h-full object-cover">
-                                                    </button>
+                                            <div class="grid grid-cols-2 gap-2" x-show="settings.presetImages && settings.presetImages.length > 0">
+                                                <template x-for="(img, index) in settings.presetImages">
+                                                    <div class="relative group aspect-video">
+                                                        <button @click="settings.bgType = 'image'; settings.bgImage = img; saveState()" class="w-full h-full rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-slate-200">
+                                                            <img :src="img" class="w-full h-full object-cover">
+                                                        </button>
+                                                        <button @click.stop="settings.presetImages.splice(index, 1); saveState()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10 opacity-70 group-hover:opacity-100"><i class="ph-bold ph-x text-[10px]"></i></button>
+                                                    </div>
                                                 </template>
                                             </div>
                                         </div>
@@ -202,12 +205,15 @@
                                                     </div>
                                                 </div>
                                             </template>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <template x-for="vid in presetVideos">
-                                                    <button @click="settings.bgType = 'video'; settings.bgVideo = vid.split('#')[0]; saveState()" class="w-full aspect-video rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-black relative flex items-center justify-center group">
-                                                        <video :src="vid" preload="metadata" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
-                                                        <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
-                                                    </button>
+                                            <div class="grid grid-cols-2 gap-2" x-show="settings.presetVideos && settings.presetVideos.length > 0">
+                                                <template x-for="(vid, index) in settings.presetVideos">
+                                                    <div class="relative group aspect-video">
+                                                        <button @click="settings.bgType = 'video'; settings.bgVideo = vid.split('#')[0]; saveState()" class="w-full h-full rounded shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all bg-black relative flex items-center justify-center">
+                                                            <video :src="vid" preload="metadata" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
+                                                            <i class="ph-fill ph-play-circle text-white text-2xl absolute drop-shadow-md"></i>
+                                                        </button>
+                                                        <button @click.stop="settings.presetVideos.splice(index, 1); saveState()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10 opacity-70 group-hover:opacity-100"><i class="ph-bold ph-x text-[10px]"></i></button>
+                                                    </div>
                                                 </template>
                                             </div>
                                         </div>
@@ -228,11 +234,14 @@
                                                     </div>
                                                 </div>
                                             </template>
-                                            <div class="flex flex-col gap-2">
-                                                <template x-for="audio in presetAudios">
-                                                    <button @click="settings.bgAudioUrl = audio.url; saveState()" class="w-full text-left p-2 text-xs font-semibold rounded hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 border border-slate-100 bg-white">
-                                                        <i class="ph-bold ph-music-notes text-lg"></i> <span x-text="audio.name"></span>
-                                                    </button>
+                                            <div class="flex flex-col gap-2" x-show="settings.presetAudios && settings.presetAudios.length > 0">
+                                                <template x-for="(audio, index) in settings.presetAudios">
+                                                    <div class="relative flex items-center gap-2 w-full p-2 text-xs font-semibold rounded border border-slate-100 bg-white group">
+                                                        <button @click="settings.bgAudioUrl = audio.url; saveState()" class="flex-1 text-left hover:text-blue-600 transition-colors flex items-center gap-2 truncate">
+                                                            <i class="ph-bold ph-music-notes text-lg"></i> <span x-text="audio.name"></span>
+                                                        </button>
+                                                        <button @click.stop="settings.presetAudios.splice(index, 1); saveState()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-full transition-colors flex items-center justify-center opacity-70 group-hover:opacity-100"><i class="ph-bold ph-x"></i></button>
+                                                    </div>
                                                 </template>
                                             </div>
                                         </div>
@@ -1085,7 +1094,27 @@
                 description: 'Tous les outils développés pour booster l\'acquisition de nos clients. 🚀\nSélectionnez une catégorie ci-dessous.',
                 custom_images: [],
                 custom_videos: [],
-                custom_audios: []
+                custom_audios: [],
+                presetImages: [
+                    'https://images.unsplash.com/photo-1506744626753-1fa28f6e3c03?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1920',
+                    'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920'
+                ],
+                presetVideos: [
+                    'https://cdn.pixabay.com/video/2016/08/22/4762-179738669_large.mp4#t=1.0',
+                    'https://cdn.pixabay.com/video/2018/06/17/16769-275143362_large.mp4#t=1.0',
+                    'https://cdn.pixabay.com/video/2019/11/04/28731-371452934_large.mp4#t=1.0',
+                    'https://cdn.pixabay.com/video/2015/09/21/722-139745585_large.mp4#t=1.0'
+                ],
+                presetAudios: [
+                    { name: 'LoFi Chill', url: 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3' },
+                    { name: 'Deep Focus', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_27606e10db.mp3' },
+                    { name: 'Ambient Piano', url: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+                    { name: 'Acoustic Guitar', url: 'https://cdn.pixabay.com/audio/2021/08/25/audio_981a8c983a.mp3' }
+                ]
             },
             categories: [
                 { 
@@ -1137,26 +1166,6 @@
                 isUploadingMedia: false,
 
                 presetColors: ['#1e3a8a', '#0f172a', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#14b8a6', '#f43f5e', '#64748b', '#ffffff', '#000000'],
-                presetImages: [
-                    'https://images.unsplash.com/photo-1506744626753-1fa28f6e3c03?q=80&w=1920',
-                    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1920',
-                    'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1920',
-                    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920',
-                    'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1920',
-                    'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920'
-                ],
-                presetVideos: [
-                    'https://cdn.pixabay.com/video/2016/08/22/4762-179738669_large.mp4#t=1.0',
-                    'https://cdn.pixabay.com/video/2018/06/17/16769-275143362_large.mp4#t=1.0',
-                    'https://cdn.pixabay.com/video/2019/11/04/28731-371452934_large.mp4#t=1.0',
-                    'https://cdn.pixabay.com/video/2015/09/21/722-139745585_large.mp4#t=1.0'
-                ],
-                presetAudios: [
-                    { name: 'LoFi Chill', url: 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3' },
-                    { name: 'Deep Focus', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_27606e10db.mp3' },
-                    { name: 'Ambient Piano', url: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-                    { name: 'Acoustic Guitar', url: 'https://cdn.pixabay.com/audio/2021/08/25/audio_981a8c983a.mp3' }
-                ],
                 mediaLibraryOpen: false,
                 mediaLibraryTab: 'colors',
 
