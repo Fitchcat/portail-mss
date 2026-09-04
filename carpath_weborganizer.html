@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -257,9 +258,12 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="categories.length"></span>
                             </h3>
                             
-                            <div class="space-y-3" x-ref="categoriesList">
+                            <div class="space-y-3" x-sort="categories = $event; saveState()">
                                 <template x-for="(cat, index) in categories" :key="cat.id">
-                                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
+                                    <div x-sort:item="cat" class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
+                                        <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                            <i class="ph-bold ph-dots-six-vertical text-xl"></i>
+                                        </button>
                                         <div class="flex-1 mr-4 cursor-pointer" @click="editCategory(cat.id)">
                                             <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="cat.title || 'Catégorie sans titre'"></div>
                                             <div class="text-[10px] text-slate-500" x-text="cat.subcategories.length + ' sous-catégorie(s)'"></div>
@@ -365,9 +369,12 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeCategory.subcategories.length"></span>
                             </h3>
 
-                            <div class="space-y-3" x-ref="subcategoriesList">
+                            <div class="space-y-3" x-sort="activeCategory.subcategories = $event; saveState()">
                                 <template x-for="(sub, index) in activeCategory.subcategories" :key="sub.id">
-                                    <div class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
+                                    <div x-sort:item="sub" class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
+                                        <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                            <i class="ph-bold ph-dots-six-vertical text-xl"></i>
+                                        </button>
                                         <div class="flex-1 mr-4 cursor-pointer" @click="editSubcategory(sub.id)">
                                             <div class="font-semibold text-sm text-blue-600 hover:underline" x-text="sub.title || 'Sans titre'"></div>
                                             <div class="text-[10px] text-slate-500" x-text="sub.cards.length + ' carte(s)'"></div>
@@ -475,13 +482,20 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeSubcategory.cards.length"></span>
                             </h3>
 
-                            <div class="space-y-4">
+                            <div class="space-y-4" x-sort="activeSubcategory.cards = $event; saveState()">
                                 <template x-for="(card, index) in activeSubcategory.cards" :key="card.id">
-                                    <div class="bg-white border border-slate-200 p-4 rounded-lg relative shadow-sm group">
-                                        <button @click="removeCard(index)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                        </button>
+                                    <div x-sort:item="card" class="bg-white border border-slate-200 p-4 rounded-lg relative shadow-sm group">
                                         
+                                        <!-- Header de la carte avec poignée drag & drop et bouton supprimer -->
+                                        <div class="flex justify-between items-center mb-3">
+                                            <button x-sort:handle class="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                                <i class="ph-bold ph-dots-six-vertical text-xl"></i>
+                                            </button>
+                                            <button @click="removeCard(index)" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+
                                         <div class="space-y-3">
                                             <div>
                                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">Titre de la carte</label>
@@ -536,6 +550,20 @@
                                             <div>
                                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">URL (Cible du clic)</label>
                                                 <input type="url" x-model="card.url" @input="saveState" placeholder="https://..." class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-blue-600">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Déplacer vers...</label>
+                                                <select class="w-full text-xs p-1.5 border rounded outline-none focus:border-blue-500 text-slate-700 bg-slate-50"
+                                                        @change="moveCard(card, index, $event.target.value); $event.target.value = ''">
+                                                    <option value="">Sélectionnez une destination</option>
+                                                    <template x-for="c in categories" :key="c.id">
+                                                        <optgroup :label="c.title || 'Catégorie sans titre'">
+                                                            <template x-for="s in c.subcategories" :key="s.id">
+                                                                <option :value="s.id" :disabled="s.id === activeSubcategory.id" x-text="(s.id === activeSubcategory.id ? '📍 (Ici) ' : '') + (s.title || 'Sous-catégorie sans titre')"></option>
+                                                            </template>
+                                                        </optgroup>
+                                                    </template>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -1053,6 +1081,27 @@
                     if(!this.activeSubcategory) return;
                     if(confirm("Supprimer cette carte ?")) {
                         this.activeSubcategory.cards.splice(index, 1);
+                        this.saveState();
+                    }
+                },
+                moveCard(card, currentIndex, targetSubId) {
+                    if (!targetSubId || targetSubId == this.activeSubcategory.id) return;
+                    
+                    let targetCat = null;
+                    let targetSub = null;
+                    
+                    for (const c of this.categories) {
+                        const s = c.subcategories.find(sub => sub.id == targetSubId);
+                        if (s) {
+                            targetCat = c;
+                            targetSub = s;
+                            break;
+                        }
+                    }
+                    
+                    if (targetSub) {
+                        this.activeSubcategory.cards.splice(currentIndex, 1);
+                        targetSub.cards.push(card);
                         this.saveState();
                     }
                 },
