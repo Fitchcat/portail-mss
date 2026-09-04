@@ -1098,21 +1098,26 @@
                 isLoading: true, // Nouvelle variable pour bloquer l'affichage du defaultState
 
                 async init() {
-                    this.supabase = supabase.createClient('https://rugwfkovnisyrjtvjzjb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1Z3dma292bmlzeXJqdHZqempiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDc0MDMsImV4cCI6MjEwNDAyMzQwM30.AMGbJDy-HERt3lVRsitKVNf--C3Z3acRz_gvYmp7iSk');
-                    
-                    const params = new URLSearchParams(window.location.search);
-                    this.portalSlug = params.get('p') || 'default';
+                    try {
+                        this.supabase = supabase.createClient('https://rugwfkovnisyrjtvjzjb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1Z3dma292bmlzeXJqdHZqempiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDc0MDMsImV4cCI6MjEwNDAyMzQwM30.AMGbJDy-HERt3lVRsitKVNf--C3Z3acRz_gvYmp7iSk');
+                        
+                        const params = new URLSearchParams(window.location.search);
+                        this.portalSlug = params.get('p') || 'default';
 
-                    const { data: { session } } = await this.supabase.auth.getSession();
-                    this.session = session;
+                        const { data, error } = await this.supabase.auth.getSession();
+                        if (data) this.session = data.session;
 
-                    this.supabase.auth.onAuthStateChange((_event, currentSession) => {
-                        this.session = currentSession;
-                    });
+                        this.supabase.auth.onAuthStateChange((_event, currentSession) => {
+                            this.session = currentSession;
+                        });
 
-                    await this.loadState();
-                    if(this.categories.length === 0) this.editMode = true;
-                    this.isLoading = false;
+                        await this.loadState();
+                        if(this.categories.length === 0) this.editMode = true;
+                    } catch (e) {
+                        console.error("Erreur critique lors de l'initialisation :", e);
+                    } finally {
+                        this.isLoading = false;
+                    }
                 },
 
                 async login() {
