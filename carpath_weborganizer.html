@@ -1115,13 +1115,11 @@
                 },
                 handleSort(type, newArray) {
                     if (type === 'categories') {
-                        this.categories = newArray;
+                        this.categories.splice(0, this.categories.length, ...newArray);
                     } else if (type === 'subcategories') {
-                        this.activeCategory.subcategories = newArray;
-                        this.categories = [...this.categories]; // Force reactivity
+                        this.activeCategory.subcategories.splice(0, this.activeCategory.subcategories.length, ...newArray);
                     } else if (type === 'cards') {
-                        this.activeSubcategory.cards = newArray;
-                        this.categories = [...this.categories]; // Force reactivity
+                        this.activeSubcategory.cards.splice(0, this.activeSubcategory.cards.length, ...newArray);
                     }
                     this.saveState();
                 },
