@@ -1006,23 +1006,17 @@
             
             <!-- Menu Navigation Latéral (Droite) -->
             <div x-cloak 
-                 class="h-full bg-slate-900/95 backdrop-blur-xl text-white shadow-2xl transition-all duration-300 z-50 flex flex-col shrink-0 relative"
-                 :class="sidebarOpen ? 'w-72 border-l border-white/10' : 'w-0'">
+                 class="absolute top-0 right-0 h-full bg-slate-900/95 backdrop-blur-xl text-white shadow-2xl transition-transform duration-300 z-50 flex flex-col w-72 border-l border-white/10"
+                 :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full'">
                 
                 <!-- Bouton Toggle intégré -->
                 <button @click="sidebarOpen = !sidebarOpen" 
-                        class="absolute -left-10 top-1/2 -translate-y-1/2 w-10 h-16 bg-slate-900/95 backdrop-blur-xl rounded-l-xl flex items-center justify-center text-white cursor-pointer hover:bg-slate-800 shadow-[-4px_0_15px_rgba(0,0,0,0.2)] transition-transform z-50">
-                    <i class="ph-bold text-xl" :class="sidebarOpen ? 'ph-caret-right' : 'ph-caret-left'"></i>
+                        class="absolute -left-12 top-6 w-12 h-12 bg-slate-900/95 backdrop-blur-xl rounded-l-xl flex items-center justify-center text-white cursor-pointer hover:bg-slate-800 shadow-[-4px_0_15px_rgba(0,0,0,0.2)] transition-colors z-50">
+                    <i class="ph-bold text-2xl" :class="sidebarOpen ? 'ph-caret-right' : 'ph-list'"></i>
                 </button>
 
                 <!-- Contenu de la Sidebar -->
-                <div class="flex-1 overflow-y-auto w-72 admin-scroll flex flex-col" x-show="sidebarOpen"
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0">
+                <div class="flex-1 overflow-y-auto admin-scroll flex flex-col">
                     <!-- Entête Menu -->
                     <div class="p-5 border-b border-white/10 flex items-center justify-between shrink-0">
                         <h2 class="font-bold text-lg flex items-center gap-2">
