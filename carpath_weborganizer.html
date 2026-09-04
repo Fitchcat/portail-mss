@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -259,10 +259,10 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="categories.length"></span>
                             </h3>
                             
-                            <div class="space-y-3" x-sort="handleSort('categories', $event)">
+                            <div class="space-y-3" x-init="Sortable.create($el, { handle: '.drag-handle', animation: 150, onEnd: e => reorderItems('categories', e.oldIndex, e.newIndex) })">
                                 <template x-for="(cat, index) in categories" :key="cat.id">
-                                    <div x-sort:item="cat" class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
-                                        <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between">
+                                        <button class="drag-handle mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
                                             <i class="ph-bold ph-dots-six-vertical text-xl"></i>
                                         </button>
                                         <div class="flex-1 mr-4 cursor-pointer" @click="editCategory(cat.id)">
@@ -370,10 +370,10 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeCategory.subcategories.length"></span>
                             </h3>
 
-                            <div class="space-y-3" x-sort="handleSort('subcategories', $event)">
+                            <div class="space-y-3" x-init="Sortable.create($el, { handle: '.drag-handle', animation: 150, onEnd: e => reorderItems('subcategories', e.oldIndex, e.newIndex) })">
                                 <template x-for="(sub, index) in activeCategory.subcategories" :key="sub.id">
-                                    <div x-sort:item="sub" class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
-                                        <button x-sort:handle class="mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                    <div class="bg-white border border-slate-200 p-3 rounded-lg relative group flex items-center justify-between shadow-sm">
+                                        <button class="drag-handle mr-3 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
                                             <i class="ph-bold ph-dots-six-vertical text-xl"></i>
                                         </button>
                                         <div class="flex-1 mr-4 cursor-pointer" @click="editSubcategory(sub.id)">
@@ -483,14 +483,14 @@
                                 <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px]" x-text="activeSubcategory.cards.length"></span>
                             </h3>
 
-                            <div class="space-y-4" x-sort="handleSort('cards', $event)">
+                            <div class="space-y-4" x-init="Sortable.create($el, { handle: '.drag-handle', animation: 150, onEnd: e => reorderItems('cards', e.oldIndex, e.newIndex) })">
                                 <template x-for="(card, index) in activeSubcategory.cards" :key="card.id">
-                                    <div x-sort:item="card" x-data="{ expanded: false }" class="bg-white border border-slate-200 p-3 rounded-lg relative shadow-sm group">
+                                    <div x-data="{ expanded: false }" class="bg-white border border-slate-200 p-3 rounded-lg relative shadow-sm group">
                                         
                                         <!-- Header de la carte avec poignée drag & drop et bouton supprimer -->
                                         <div class="flex justify-between items-center" :class="expanded ? 'mb-2' : ''">
                                             <div class="flex items-center gap-2 flex-1">
-                                                <button x-sort:handle class="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                                <button class="drag-handle text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
                                                     <i class="ph-bold ph-dots-six-vertical text-xl"></i>
                                                 </button>
                                                 <div class="flex-1 font-semibold text-sm cursor-pointer text-slate-700 hover:text-blue-600 flex items-center gap-2" @click="expanded = !expanded">
@@ -708,14 +708,24 @@
                             </div>
 
                             <!-- Grille dynamique basée sur currentSubcategory.columns -->
-                            <div class="grid gap-4 mx-auto" 
+                            <div class="grid gap-4 md:gap-6 mt-6 pb-24 mx-auto"
                                  :class="[
                                     'grid-cols-1', 
                                     currentSubcategory.columns > 1 ? 'sm:grid-cols-2' : '',
                                     currentSubcategory.columns > 2 ? 'md:grid-cols-3' : 'md:grid-cols-' + currentSubcategory.columns,
                                     'lg:grid-cols-' + currentSubcategory.columns
                                  ].filter(Boolean).join(' ')"
-                                 :style="currentSubcategory.columns === 1 ? 'max-width: 480px;' : 'max-width: 1024px;'">
+                                 :style="currentSubcategory.columns === 1 ? 'max-width: 480px;' : 'max-width: 1024px;'"
+                                 x-init="
+                                     const s = Sortable.create($el, { 
+                                         animation: 150, 
+                                         delay: 200, 
+                                         delayOnTouchOnly: true, 
+                                         onEnd: e => reorderItems('cards_preview', e.oldIndex, e.newIndex) 
+                                     });
+                                     $watch('editMode', val => s.option('disabled', !val));
+                                     s.option('disabled', !editMode);
+                                 ">
                                 <template x-for="card in currentSubcategory.cards" :key="card.id">
                                     <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
                                        class="link-button flex flex-col rounded-2xl shadow-sm overflow-hidden relative group"
@@ -1113,15 +1123,18 @@
                         this.saveState();
                     }
                 },
-                handleSort(type, newArray) {
-                    if (type === 'categories') {
-                        this.categories.splice(0, this.categories.length, ...newArray);
-                    } else if (type === 'subcategories') {
-                        this.activeCategory.subcategories.splice(0, this.activeCategory.subcategories.length, ...newArray);
-                    } else if (type === 'cards') {
-                        this.activeSubcategory.cards.splice(0, this.activeSubcategory.cards.length, ...newArray);
+                reorderItems(type, oldIndex, newIndex) {
+                    let list = null;
+                    if (type === 'categories') list = this.categories;
+                    else if (type === 'subcategories') list = this.activeCategory?.subcategories;
+                    else if (type === 'cards') list = this.activeSubcategory?.cards;
+                    else if (type === 'cards_preview') list = this.currentSubcategory?.cards;
+                    
+                    if (list && oldIndex !== newIndex) {
+                        const item = list.splice(oldIndex, 1)[0];
+                        list.splice(newIndex, 0, item);
+                        this.saveState();
                     }
-                    this.saveState();
                 },
 
                 async saveState() {
