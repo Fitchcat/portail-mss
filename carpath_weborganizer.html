@@ -1339,8 +1339,8 @@
                 // --- Uploads ---
                 processFileUpload(file, callback) {
                     if (file) {
-                        if (file.size > 10 * 1024 * 1024) { 
-                            alert("Le fichier est trop lourd (limite ~10Mo). Préférez utiliser une URL (lien) pour les gros fichiers.");
+                        if (file.size > 3.5 * 1024 * 1024) { 
+                            alert("Le fichier est trop lourd (limite 3.5Mo pour le stockage direct). Préférez utiliser une URL (lien) pour les vidéos ou les fichiers volumineux.");
                             return;
                         }
                         const reader = new FileReader();
@@ -1495,7 +1495,15 @@
                     };
                     
                     // Toujours sauvegarder en local en backup
-                    localStorage.setItem('mssLinktreeState', JSON.stringify(state));
+                    try {
+                        localStorage.setItem('mssLinktreeState', JSON.stringify(state));
+                    } catch (e) {
+                        if (e.name === 'QuotaExceededError' || e.code === 22) {
+                            alert("⚠️ Stockage local plein ! Votre média est trop volumineux (la mémoire totale du navigateur est limitée à ~5Mo). La sauvegarde a échoué. Veuillez compresser votre média ou utiliser un lien URL.");
+                        } else {
+                            console.error("Erreur de sauvegarde locale:", e);
+                        }
+                    }
                     
                     // Sauvegarde dans Supabase si connecté
                     if (this.session) {
