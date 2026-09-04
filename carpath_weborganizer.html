@@ -253,9 +253,9 @@
                                         <span x-text="isDragging ? 'Relâchez pour ajouter' : 'Glisser-déposer un fichier MP3'"></span>
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between mt-2" x-show="settings.bgAudioUrl">
-                                    <div class="text-[10px] text-slate-500 truncate flex-1" x-text="settings.bgAudioUrl"></div>
-                                    <button @click="settings.bgAudioUrl = ''; saveState()" class="text-xs text-red-500 hover:text-red-700 font-semibold ml-2">Supprimer</button>
+                                <div class="mt-2 flex gap-2">
+                                    <input type="url" x-model="settings.bgAudioUrl" @input="saveState" placeholder="Ou collez une URL de musique..." class="flex-1 text-xs p-1.5 border rounded outline-none focus:border-blue-500">
+                                    <button x-show="settings.bgAudioUrl" @click="settings.bgAudioUrl = ''; saveState()" class="text-xs text-red-500 hover:text-red-700 font-semibold px-2">Supprimer</button>
                                 </div>
                             </div>
 
@@ -1094,7 +1094,7 @@
                 ],
                 presetAudios: [
                     { name: 'LoFi Chill', url: 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3' },
-                    { name: 'Corporate Tech', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_27606e10db.mp3' },
+                    { name: 'Deep Focus', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_27606e10db.mp3' },
                     { name: 'Ambient Piano', url: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
                     { name: 'Acoustic Guitar', url: 'https://cdn.pixabay.com/audio/2021/08/25/audio_981a8c983a.mp3' }
                 ],
