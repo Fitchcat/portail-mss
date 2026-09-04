@@ -1426,6 +1426,9 @@
                         categories: this.categories
                     };
                     
+                    // Toujours sauvegarder en local en backup
+                    localStorage.setItem('mssLinktreeState', JSON.stringify(state));
+                    
                     // Sauvegarde dans Supabase si connecté
                     if (this.session) {
                         const { error } = await this.supabase.from('portals').upsert(
@@ -1469,24 +1472,31 @@
                 },
 
                 async loadState() {
-                    // Charger depuis Supabase via le slug
-                    const { data, error } = await this.supabase.from('portals').select('state').eq('slug', this.portalSlug).single();
-                    if (data && data.state) {
-                        try {
-                            const parsed = data.state;
-                            this.settings = { ...this.settings, ...parsed.settings };
-                            this.categories = this.migrateIcons(parsed.categories || []);
-                        } catch (e) { console.error('Load error', e); }
-                    } else {
-                        // TENTATIVE DE RECUPERATION DES DONNEES LOCALES (Migration)
+                    let loadedFromLocal = false;
+
+                    // Si on est sur le portail par défaut, on priorise toujours les données locales s'il y en a (Backup utilisateur)
+                    if (this.portalSlug === 'default') {
                         const saved = localStorage.getItem('mssLinktreeState');
                         if (saved) {
                             try {
                                 const parsed = JSON.parse(saved);
                                 if (parsed.settings) this.settings = { ...this.settings, ...parsed.settings };
                                 if (parsed.categories) this.categories = this.migrateIcons(parsed.categories);
+                                loadedFromLocal = true;
                                 console.log("Données récupérées depuis le cache local !");
                             } catch (e) { console.error('Local Load error', e); }
+                        }
+                    }
+
+                    // Charger depuis Supabase si on n'a pas chargé depuis le local
+                    if (!loadedFromLocal) {
+                        const { data, error } = await this.supabase.from('portals').select('state').eq('slug', this.portalSlug).single();
+                        if (data && data.state) {
+                            try {
+                                const parsed = data.state;
+                                this.settings = { ...this.settings, ...parsed.settings };
+                                this.categories = this.migrateIcons(parsed.categories || []);
+                            } catch (e) { console.error('Load error', e); }
                         }
                     }
                 },
