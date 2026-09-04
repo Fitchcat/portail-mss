@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -484,19 +485,25 @@
 
                             <div class="space-y-4" x-sort="activeSubcategory.cards = $event; saveState()">
                                 <template x-for="(card, index) in activeSubcategory.cards" :key="card.id">
-                                    <div x-sort:item="card" class="bg-white border border-slate-200 p-4 rounded-lg relative shadow-sm group">
+                                    <div x-sort:item="card" x-data="{ expanded: false }" class="bg-white border border-slate-200 p-3 rounded-lg relative shadow-sm group">
                                         
                                         <!-- Header de la carte avec poignée drag & drop et bouton supprimer -->
-                                        <div class="flex justify-between items-center mb-3">
-                                            <button x-sort:handle class="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
-                                                <i class="ph-bold ph-dots-six-vertical text-xl"></i>
-                                            </button>
-                                            <button @click="removeCard(index)" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div class="flex justify-between items-center" :class="expanded ? 'mb-2' : ''">
+                                            <div class="flex items-center gap-2 flex-1">
+                                                <button x-sort:handle class="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing">
+                                                    <i class="ph-bold ph-dots-six-vertical text-xl"></i>
+                                                </button>
+                                                <div class="flex-1 font-semibold text-sm cursor-pointer text-slate-700 hover:text-blue-600 flex items-center gap-2" @click="expanded = !expanded">
+                                                    <i :class="expanded ? 'ph-bold ph-caret-down' : 'ph-bold ph-caret-right'" class="text-slate-400"></i>
+                                                    <span x-text="card.title || 'Nouvelle carte'"></span>
+                                                </div>
+                                            </div>
+                                            <button @click="removeCard(index)" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                             </button>
                                         </div>
 
-                                        <div class="space-y-3">
+                                        <div x-show="expanded" x-collapse class="space-y-3 mt-3 pt-3 border-t border-slate-100">
                                             <div>
                                                 <label class="block text-[10px] font-semibold text-slate-500 mb-1">Titre de la carte</label>
                                                 <input type="text" x-model="card.title" @input="saveState" class="w-full text-sm p-1.5 border rounded outline-none focus:border-blue-500 font-semibold">
