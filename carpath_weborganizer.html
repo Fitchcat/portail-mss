@@ -48,6 +48,15 @@
 </head>
 <body x-data="linktreeApp()" class="min-h-screen relative transition-colors duration-300" :style="bodyStyle()">
 
+    <!-- Indicateur d'upload global -->
+    <div x-show="isUploadingMedia" x-cloak class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl p-8 flex flex-col items-center shadow-2xl max-w-sm text-center">
+            <i class="ph-bold ph-spinner-gap animate-spin text-5xl text-blue-500 mb-4"></i>
+            <p class="font-bold text-slate-800 text-lg">Envoi en cours...</p>
+            <p class="text-sm text-slate-500 mt-2">Veuillez patienter pendant le transfert du fichier vers le serveur. Cela peut prendre quelques instants pour les vidéos.</p>
+        </div>
+    </div>
+
     <!-- Arrière-plans dynamiques -->
     <template x-if="settings.bgType === 'image' && settings.bgImage">
         <img :src="settings.bgImage" class="bg-layer" alt="Background">
@@ -1131,6 +1140,7 @@
                 
                 searchQuery: '',
                 sidebarOpen: window.innerWidth >= 1024,
+                isUploadingMedia: false,
 
                 presetColors: ['#1e3a8a', '#0f172a', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#14b8a6', '#f43f5e', '#64748b', '#ffffff', '#000000'],
                 presetImages: [
@@ -1337,19 +1347,54 @@
                 },
 
                 // --- Uploads ---
-                processFileUpload(file, callback) {
-                    if (file) {
-                        if (file.size > 3.5 * 1024 * 1024) { 
-                            alert("Le fichier est trop lourd (limite 3.5Mo pour le stockage direct). Préférez utiliser une URL (lien) pour les vidéos ou les fichiers volumineux.");
-                            return;
+                async processFileUpload(file, callback) {
+                    if (!file) return;
+
+                    // Option 1 : Upload vers Supabase Storage
+                    if (this.supabase) {
+                        try {
+                            this.isUploadingMedia = true;
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+                            
+                            const { data, error } = await this.supabase.storage
+                                .from('media')
+                                .upload(fileName, file, {
+                                    cacheControl: '3600',
+                                    upsert: false
+                                });
+
+                            if (error) throw error;
+
+                            const { data: publicUrlData } = this.supabase.storage
+                                .from('media')
+                                .getPublicUrl(fileName);
+
+                            this.isUploadingMedia = false;
+                            
+                            if (publicUrlData && publicUrlData.publicUrl) {
+                                callback(publicUrlData.publicUrl);
+                                this.saveState();
+                                return; // Upload réussi
+                            }
+                        } catch (err) {
+                            console.warn("Échec de l'upload Supabase (problème de permissions ou réseau), passage au stockage local (Base64). Erreur:", err);
+                            this.isUploadingMedia = false;
+                            // En cas d'erreur, on continue vers le fallback local ci-dessous
                         }
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            callback(e.target.result);
-                            this.saveState();
-                        };
-                        reader.readAsDataURL(file);
                     }
+
+                    // Option 2 : Fallback Stockage Local (Base64)
+                    if (file.size > 3.5 * 1024 * 1024) { 
+                        alert("Le fichier est trop lourd (limite 3.5Mo pour le stockage direct). Préférez utiliser une URL (lien) pour les vidéos ou les fichiers volumineux.");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        callback(e.target.result);
+                        this.saveState();
+                    };
+                    reader.readAsDataURL(file);
                 },
                 
                 async pasteImageFromClipboard(callback) {
