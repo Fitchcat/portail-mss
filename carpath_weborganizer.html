@@ -919,7 +919,6 @@
                                 <div class="hidden md:block w-24"></div> <!-- Spacer for centering -->
                             </div>
 
-                            <!-- Grille dynamique basée sur currentSubcategory.columns -->
                             <div class="grid gap-4 md:gap-6 mt-6 pb-24 mx-auto"
                                  :class="[
                                     'grid-cols-1', 
@@ -933,6 +932,7 @@
                                          animation: 150, 
                                          delay: 200, 
                                          delayOnTouchOnly: true, 
+                                         filter: '.no-drag',
                                          onEnd: e => reorderItems('cards_preview', e.oldIndex, e.newIndex) 
                                      });
                                      $watch('editMode', val => s.option('disabled', !val));
@@ -981,6 +981,16 @@
                                         </div>
                                     </div>
                                 </template>
+
+                                <!-- Bouton "+" pour ajouter une carte (Visible par tous, ouvre l'admin si non connecté) -->
+                                <button @click="directAddCard()" 
+                                        class="no-drag relative rounded-2xl shadow-sm overflow-hidden group flex flex-col items-center justify-center border-2 border-dashed border-white/40 hover:bg-white/10 transition-colors h-full min-h-[160px]"
+                                        :style="settings.bgType !== 'color' ? 'border-color: rgba(255,255,255,0.4); color: white;' : 'border-color: ' + settings.textColor + '66; color: ' + settings.textColor">
+                                    <div class="flex flex-col items-center gap-2 opacity-70 group-hover:opacity-100">
+                                        <i class="ph-bold ph-plus text-4xl"></i>
+                                        <span class="font-bold text-sm">Ajouter une carte</span>
+                                    </div>
+                                </button>
                             </div>
                             <div x-show="currentSubcategory.cards.length === 0" class="text-center py-8 opacity-70">
                                 Cette sous-catégorie est vide.
@@ -1162,7 +1172,7 @@
                 audioPlaying: false,
                 
                 searchQuery: '',
-                sidebarOpen: window.innerWidth >= 1024,
+                sidebarOpen: false,
                 isUploadingMedia: false,
 
                 presetColors: ['#1e3a8a', '#0f172a', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#14b8a6', '#f43f5e', '#64748b', '#ffffff', '#000000'],
@@ -1533,6 +1543,25 @@
                         this.activeSubcategory.cards.splice(index, 1);
                         this.saveState();
                     }
+                },
+                directAddCard() {
+                    this.editMode = true;
+                    if (window.innerWidth < 1024) this.sidebarOpen = false;
+                    
+                    if(!this.session) return;
+                    
+                    this.editingCategoryId = this.currentCategoryId;
+                    this.editingSubcategoryId = this.currentSubcategoryId;
+                    this.adminView = 'subcategory';
+                    
+                    setTimeout(() => {
+                        this.addCard();
+                        setTimeout(() => {
+                            const adminPanels = document.querySelectorAll('.admin-scroll');
+                            const adminPanel = adminPanels[adminPanels.length - 1] || adminPanels[0];
+                            if (adminPanel) adminPanel.scrollTop = adminPanel.scrollHeight;
+                        }, 100);
+                    }, 50);
                 },
                 moveCard(card, currentIndex, targetSubId) {
                     if (!targetSubId || targetSubId == this.activeSubcategory.id) return;
