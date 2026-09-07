@@ -955,10 +955,8 @@
                                      s.option('disabled', !editMode);
                                  ">
                                 <template x-for="card in currentSubcategory.cards" :key="card.id">
-                                    <div x-data="{ showInfo: false, showContextMenu: false, contextX: 0, contextY: 0 }" 
-                                         class="relative rounded-2xl shadow-sm overflow-hidden group"
-                                         @contextmenu.prevent="if(session) { showContextMenu = true; contextX = $event.clientX; contextY = $event.clientY; }"
-                                         @click.outside="showContextMenu = false">
+                                    <div x-data="{ showInfo: false }" 
+                                         class="relative rounded-2xl shadow-sm overflow-hidden group">
                                         <!-- Lien Principal -->
                                         <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
                                            class="link-button flex flex-col h-full"
@@ -982,10 +980,18 @@
                                             </div>
                                         </a>
 
-                                        <!-- Bouton Plus -->
+                                        <!-- Bouton Plus (Info) -->
                                         <template x-if="card.description && card.description.trim() !== ''">
-                                            <button @click.prevent="showInfo = true" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 backdrop-blur-sm shadow-sm transition-colors z-10">
+                                            <button @click.prevent="showInfo = true" class="absolute top-2 left-2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 backdrop-blur-sm shadow-sm transition-colors z-10">
                                                 <i class="ph-bold ph-plus"></i>
+                                            </button>
+                                        </template>
+
+                                        <!-- Bouton Supprimer (Admin uniquement, en haut à droite) -->
+                                        <template x-if="session">
+                                            <button @click.prevent="if(confirm('Voulez-vous supprimer cette carte ?')) { currentSubcategory.cards = currentSubcategory.cards.filter(c => c.id !== card.id); saveState(); }" 
+                                                    class="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 backdrop-blur-sm shadow-sm transition-opacity z-10 opacity-0 group-hover:opacity-100">
+                                                <i class="ph-bold ph-trash"></i>
                                             </button>
                                         </template>
 
@@ -996,16 +1002,6 @@
                                             <p class="text-white text-sm font-medium leading-relaxed drop-shadow-sm" x-text="card.description"></p>
                                             <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
                                                 <i class="ph-bold ph-x"></i>
-                                            </button>
-                                        </div>
-
-                                        <!-- Menu contextuel (Clic Droit) -->
-                                        <div x-show="showContextMenu" 
-                                             class="fixed z-[100] bg-white rounded-lg shadow-xl border border-slate-200 py-1 min-w-[140px]"
-                                             :style="`top: ${contextY}px; left: ${contextX}px;`" style="display: none;">
-                                            <button @click.prevent="if(confirm('Supprimer cette carte ?')) { currentSubcategory.cards = currentSubcategory.cards.filter(c => c.id !== card.id); saveState(); showContextMenu = false; }" 
-                                                    class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm font-semibold flex items-center gap-2">
-                                                <i class="ph-bold ph-trash"></i> Supprimer
                                             </button>
                                         </div>
                                     </div>
