@@ -618,6 +618,18 @@
                                     <option value="6">6 Colonnes</option>
                                 </select>
                             </div>
+                            
+                            <!-- Déplacer la sous-catégorie -->
+                            <div class="pt-2 border-t border-slate-100 mt-4">
+                                <label class="block text-xs font-semibold mb-1 text-slate-600">Déplacer la sous-catégorie vers...</label>
+                                <select class="w-full text-sm p-2 border rounded focus:border-blue-500 outline-none bg-slate-50 text-slate-700"
+                                        @change="moveSubcategory($event.target.value); $event.target.value = ''">
+                                    <option value="">Sélectionnez une catégorie de destination</option>
+                                    <template x-for="c in categories" :key="c.id">
+                                        <option :value="c.id" :disabled="c.id === activeCategory.id" x-text="(c.id === activeCategory.id ? '📍 (Actuelle) ' : '') + (c.title || 'Catégorie sans titre')"></option>
+                                    </template>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
@@ -915,7 +927,11 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                     Retour
                                 </button>
-                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md" x-text="currentSubcategory.title"></h2>
+                                <h2 class="text-xl md:text-2xl font-bold text-center drop-shadow-md">
+                                    <span x-text="currentCategory.title" class="opacity-75 text-lg"></span>
+                                    <span class="mx-2 opacity-50">-</span>
+                                    <span x-text="currentSubcategory.title"></span>
+                                </h2>
                                 <div class="hidden md:block w-24"></div> <!-- Spacer for centering -->
                             </div>
 
@@ -939,7 +955,10 @@
                                      s.option('disabled', !editMode);
                                  ">
                                 <template x-for="card in currentSubcategory.cards" :key="card.id">
-                                    <div x-data="{ showInfo: false }" class="relative rounded-2xl shadow-sm overflow-hidden group">
+                                    <div x-data="{ showInfo: false, showContextMenu: false, contextX: 0, contextY: 0 }" 
+                                         class="relative rounded-2xl shadow-sm overflow-hidden group"
+                                         @contextmenu.prevent="if(session) { showContextMenu = true; contextX = $event.clientX; contextY = $event.clientY; }"
+                                         @click.outside="showContextMenu = false">
                                         <!-- Lien Principal -->
                                         <a :href="card.url || '#'" target="_blank" rel="noopener noreferrer" 
                                            class="link-button flex flex-col h-full"
@@ -977,6 +996,16 @@
                                             <p class="text-white text-sm font-medium leading-relaxed drop-shadow-sm" x-text="card.description"></p>
                                             <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
                                                 <i class="ph-bold ph-x"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Menu contextuel (Clic Droit) -->
+                                        <div x-show="showContextMenu" 
+                                             class="fixed z-[100] bg-white rounded-lg shadow-xl border border-slate-200 py-1 min-w-[140px]"
+                                             :style="`top: ${contextY}px; left: ${contextX}px;`" style="display: none;">
+                                            <button @click.prevent="if(confirm('Supprimer cette carte ?')) { currentSubcategory.cards = currentSubcategory.cards.filter(c => c.id !== card.id); saveState(); showContextMenu = false; }" 
+                                                    class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm font-semibold flex items-center gap-2">
+                                                <i class="ph-bold ph-trash"></i> Supprimer
                                             </button>
                                         </div>
                                     </div>
@@ -1320,12 +1349,7 @@
                 // --- Navigation Public ---
                 openCategory(id) {
                     this.currentCategoryId = id;
-                    const cat = this.categories.find(c => c.id === id);
-                    if (cat && cat.subcategories && cat.subcategories.length > 0) {
-                        this.currentSubcategoryId = cat.subcategories[0].id;
-                    } else {
-                        this.currentSubcategoryId = null;
-                    }
+                    this.currentSubcategoryId = null;
                 },
                 closeCategory() {
                     this.currentCategoryId = null;
@@ -1583,6 +1607,21 @@
                         targetSub.cards.push(card);
                         this.categories = [...this.categories]; // Force Alpine reactivity
                         this.saveState();
+                    }
+                },
+                moveSubcategory(targetCatId) {
+                    if (!targetCatId || targetCatId == this.activeCategory.id) return;
+                    
+                    const targetCat = this.categories.find(c => c.id == targetCatId);
+                    if (targetCat && this.activeCategory && this.activeSubcategory) {
+                        const subIndex = this.activeCategory.subcategories.findIndex(s => s.id == this.activeSubcategory.id);
+                        if (subIndex > -1) {
+                            const sub = this.activeCategory.subcategories.splice(subIndex, 1)[0];
+                            targetCat.subcategories.push(sub);
+                            this.editingCategoryId = targetCat.id;
+                            this.categories = [...this.categories];
+                            this.saveState();
+                        }
                     }
                 },
                 reorderItems(type, oldIndex, newIndex) {
